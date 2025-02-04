@@ -1,11 +1,23 @@
-package schema
+package general
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
-// SiteDetail holds the schema definition for the SiteDetail entity.
+var CommonFields = []ent.Field{
+	field.UUID("id", uuid.UUID{}).
+		Default(uuid.New),
+	field.Time("created_at").
+		Default(time.Now),
+	field.Time("updated_at").
+		Default(time.Now).
+		UpdateDefault(time.Now),
+}
+
 type SiteDetail struct {
 	ent.Schema
 }
@@ -13,22 +25,22 @@ type SiteDetail struct {
 // Fields of the SiteDetail.
 func (SiteDetail) Fields() []ent.Field {
 	return append(
-		CommonFields, 
+		CommonFields,
 		field.String("name").
 			Default("EDNET"),
-        field.String("email").
+		field.String("email").
 			Default("kayprogrammer1@gmail.com"),
-        field.String("phone").
+		field.String("phone").
 			Default("+2348133831036"),
-        field.String("address").
+		field.String("address").
 			Default("234, Lagos, Nigeria"),
-        field.String("fb").
+		field.String("fb").
 			Default("https://facebook.com"),
-        field.String("tw").
+		field.String("tw").
 			Default("https://twitter.com"),
-        field.String("wh").
+		field.String("wh").
 			Default("https://wa.me/2348133831036"),
-        field.String("ig").
+		field.String("ig").
 			Default("https://instagram.com"),
 	)
 }
