@@ -9,7 +9,7 @@ import (
 // @Summary Retrieve site details
 // @Description This endpoint retrieves few details of the site/application.
 // @Tags General
-// @Success 200 {object} schemas.SiteDetailResponseSchema
+// @Success 200 {object} SiteDetailResponseSchema
 // @Router /general/site-detail [get]
 func GetSiteDetails(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {

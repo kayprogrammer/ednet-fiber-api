@@ -7,6 +7,7 @@ import (
 
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/migrate"
+	_ "github.com/lib/pq"
 )
 
 func ConnectDb(cfg Config) *ent.Client {

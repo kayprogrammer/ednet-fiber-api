@@ -23,7 +23,7 @@ mig:
 test:
 	go test ./tests -v -count=1
 
-ureqm:
+ureq:
 	go mod tidy
 
 swag:

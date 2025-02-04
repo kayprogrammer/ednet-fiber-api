@@ -1,11 +1,12 @@
 package general
 
 import (
+	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/base"
 )
 
 type SiteDetailSchema struct {
-	Name 		string 		`json:"name" example:"SocialNet"`
+	Name 		string 		`json:"name" example:"EDNET"`
 	Email 		string 		`json:"email" example:"johndoe@email.com"`
 	Phone 		string		`json:"phone" example:"+2348133831036"`
 	Address 	string		`json:"address" example:"234, Lagos, Nigeria"`

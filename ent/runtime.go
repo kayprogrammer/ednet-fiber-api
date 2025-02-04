@@ -7,14 +7,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/sitedetail"
-	"github.com/kayprogrammer/ednet-fiber-api/modules/general"
+	"github.com/kayprogrammer/ednet-fiber-api/modules/general/models"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	sitedetailFields := general.SiteDetail{}.Fields()
+	sitedetailFields := models.SiteDetail{}.Fields()
 	_ = sitedetailFields
 	// sitedetailDescCreatedAt is the schema descriptor for created_at field.
 	sitedetailDescCreatedAt := sitedetailFields[1].Descriptor()

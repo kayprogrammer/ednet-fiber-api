@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
-	"github.com/kayprogrammer/ednet-fiber-api/modules/base"
+	"github.com/kayprogrammer/ednet-fiber-api/modules/base/routes"
 )
 
 // @title EDNET API
@@ -47,7 +47,7 @@ func main() {
 
 	app.Use(swagger.New(swaggerCfg))
 
-	base.SetupRoutes(app, db)
+	routes.SetupRoutes(app, db)
 	defer db.Close()
 	log.Fatal(app.Listen(fmt.Sprintf(":%s", cfg.Port)))
 }
