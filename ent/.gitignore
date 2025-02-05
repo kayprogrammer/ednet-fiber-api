@@ -1,6 +1,0 @@
-# Ignore all generated files
-*
-!.gitignore
-!generate.go
-!/schemas/
-!/schemas/**
