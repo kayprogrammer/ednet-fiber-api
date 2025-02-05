@@ -29,6 +29,10 @@ func Register(db *ent.Client) fiber.Handler {
 		if userByEmail != nil {
 			return config.APIError(c, 422, config.ValidationErr("email", "Email already registered!"))
 		}
+		userByUsername := userManager.GetByUsername(db, ctx, data.Username)
+		if userByUsername != nil {
+			return config.APIError(c, 422, config.ValidationErr("username", "Username already used!"))
+		}
 
 		// Create User
 		newUser := userManager.Create(db, ctx, data, false, false)
