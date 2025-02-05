@@ -1,0 +1,244 @@
+{
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "## A Full-Featured EDTECH API built with FIBER \u0026 ENT ORM.\n\n\u003c!-- ### WEBSOCKETS:\n\n#### Notifications\n\n- URL: `wss://{host}/api/v4/ws/notifications`\n\n- Requires authorization, so pass in the Bearer Authorization header.\n\n- You can only read and not send notification messages into this socket. --\u003e\n\n\n\u003c!-- #### Chats\n\n- URL: `wss://{host}/api/v4/ws/chats/{id}`\n- Requires authorization, so pass in the Bearer Authorization header.\n- Use chat_id as the ID for an existing chat or username if it's the first message in a DM.\n- You cannot read realtime messages from a username that doesn't belong to the authorized user, but you can surely send messages.\n- Only send a message to the socket endpoint after the message has been created or updated, and files have been uploaded.\n- Fields when sending a message through the socket:\n\n  ```json\n  { \"status\": \"CREATED\", \"id\": \"fe4e0235-80fc-4c94-b15e-3da63226f8ab\" }\n  ``` --\u003e",
+        "title": "EDNET API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/api/v1",
+    "paths": {
+        "/auth/register": {
+            "post": {
+                "description": "This endpoint registers new users into our application.",
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "User object",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accounts.RegisterSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/accounts.RegisterResponseSchema"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/config.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/general/site-detail": {
+            "get": {
+                "description": "This endpoint retrieves few details of the site/application.",
+                "tags": [
+                    "General"
+                ],
+                "summary": "Retrieve site details",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/general.SiteDetailResponseSchema"
+                        }
+                    }
+                }
+            }
+        },
+        "/healthcheck": {
+            "get": {
+                "description": "This endpoint checks the health of our application.",
+                "tags": [
+                    "HealthCheck"
+                ],
+                "summary": "HealthCheck",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/routes.HealthCheckSchema"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "accounts.EmailRequestSchema": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "minLength": 5,
+                    "example": "johndoe@email.com"
+                }
+            }
+        },
+        "accounts.RegisterResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/accounts.EmailRequestSchema"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "accounts.RegisterSchema": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "minLength": 5,
+                    "example": "johndoe@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "example": "John Doe"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 8,
+                    "example": "strongpassword"
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "example": "johndoe"
+                }
+            }
+        },
+        "config.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "general.SiteDetailResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/general.SiteDetailSchema"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "general.SiteDetailSchema": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "234, Lagos, Nigeria"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "johndoe@email.com"
+                },
+                "fb": {
+                    "type": "string",
+                    "example": "https://facebook.com"
+                },
+                "ig": {
+                    "type": "string",
+                    "example": "https://instagram.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "EDNET"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+2348133831036"
+                },
+                "tw": {
+                    "type": "string",
+                    "example": "https://twitter.com"
+                },
+                "wh": {
+                    "type": "string",
+                    "example": "https://wa.me/2348133831036"
+                }
+            }
+        },
+        "routes.HealthCheckSchema": {
+            "type": "object",
+            "properties": {
+                "success": {
+                    "type": "string",
+                    "example": "pong"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type 'Bearer jwt_string' to correctly set the API Key",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    },
+    "security": [
+        {
+            "BearerAuth": []
+        }
+    ]
+}
