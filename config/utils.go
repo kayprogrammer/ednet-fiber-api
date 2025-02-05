@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"log"
 	"math/rand"
 	"reflect"
 	"time"
@@ -60,8 +59,7 @@ func intPow(base, exponent int) int {
 
 // PASSWORD HASHING
 func HashPassword(password string) string {
-    bytes, err := bcrypt.GenerateFromPassword([]byte(password), 8)
-	log.Println(err)
+    bytes, _ := bcrypt.GenerateFromPassword([]byte(password), 8)
     return string(bytes)
 }
 

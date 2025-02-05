@@ -37,7 +37,7 @@ func (User) Fields() []ent.Field {
 			Optional().Nillable(),
 		field.String("refresh").
 			Optional().Nillable(),
-		field.Int("otp").
+		field.Uint32("otp").
 			Optional().Nillable(),
 		field.Time("otpExpiry").
 			Optional().Nillable(),

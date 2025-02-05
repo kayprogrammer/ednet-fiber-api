@@ -38,8 +38,7 @@ func Register(db *ent.Client) fiber.Handler {
 		newUser := userManager.Create(db, ctx, data, false, false)
 
 		// Send Email
-		// otp := otpManager.GetOrCreate(db, newUser.ID)
-		// go senders.SendEmail(newUser, "activate", &otp.Code)
+		go config.SendEmail(newUser, "activate", newUser.Otp)
 
 		response := RegisterResponseSchema{
 			ResponseSchema: base.ResponseSchema{Message: "Registration successful"},

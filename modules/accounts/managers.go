@@ -2,6 +2,7 @@ package accounts
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
@@ -59,7 +60,10 @@ func (obj UserManager) GetByUsernames(db *ent.Client, ctx context.Context, usern
 }
 
 func (obj UserManager) Create(db *ent.Client, ctx context.Context, userData RegisterSchema, isStaff bool, isVerified bool) *ent.User {
+	cfg := config.GetConfig()
 	password := config.HashPassword(userData.Password)
+	otp := config.GetRandomInt(6)
+	otpExpiry := time.Now().UTC().Add(time.Duration(cfg.EmailOtpExpireMinutes) * time.Minute)
 	u := db.User.Create().
 		SetName(userData.Name).
 		SetEmail(userData.Email).
@@ -67,6 +71,8 @@ func (obj UserManager) Create(db *ent.Client, ctx context.Context, userData Regi
 		SetPassword(password).
 		SetIsStaff(isStaff).
 		SetIsVerified(isVerified).
+		SetOtp(otp).
+		SetOtpExpiry(otpExpiry).
 		SaveX(ctx)
 	return u
 }
