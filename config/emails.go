@@ -8,54 +8,66 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-
+	mail "gopkg.in/gomail.v2"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
-	"gopkg.in/gomail.v2"
 )
 
-func sortEmail(emailType string, code *uint32) map[string]interface{} {
+type EmailTypeChoice string
+
+const (
+	ET_ACTIVATE              EmailTypeChoice = "activate"
+	ET_WELCOME               EmailTypeChoice = "welcome"
+	ET_RESET                 EmailTypeChoice = "reset"
+	ET_RESET_SUCC            EmailTypeChoice = "reset-success"
+	ET_PAYMENT_SUCC          EmailTypeChoice = "payment-succeeded"
+	ET_PAYMENT_FAIL          EmailTypeChoice = "payment-failed"
+	ET_PAYMENT_CANCEL        EmailTypeChoice = "payment-canceled"
+)
+
+func sortEmail(emailType EmailTypeChoice, otp *uint32) map[string]interface{} {
 	templateFile := "templates/welcome.html"
-    subject := "Account verified"
+	subject := "Account verified"
 	data := make(map[string]interface{})
-    data["template_file"] = templateFile 
+	data["template_file"] = templateFile
 	data["subject"] = subject
+	data["text"] = "Your Verification was completed."
 
-    // Sort different templates and subject for respective email types
-	if emailType == "activate" {
-        templateFile = "templates/email-activation.html"
-        subject = "Activate your account"
-        data["template_file"] = templateFile 
-		data["subject"] = subject 
-		data["otp"] = code
+	// Sort different templates and subject for respective email types
+	switch emailType {
+	case ET_ACTIVATE:
+		templateFile = "templates/email-activation.html"
+		subject = "Activate your account"
+		data["template_file"] = templateFile
+		data["subject"] = subject
+		data["otp"] = otp
 
-	} else if emailType == "reset"{
+	case ET_RESET:
 		templateFile = "templates/password-reset.html"
-        subject = "Reset your password"
-		data["template_file"] = templateFile 
-		data["subject"] = subject 
-		data["otp"] = code
+		subject = "Activate your account"
+		data["template_file"] = templateFile
+		data["subject"] = subject
+		data["otp"] = otp
 
-    } else if emailType == "reset-success" {
+	case ET_RESET_SUCC:
 		templateFile = "templates/password-reset-success.html"
-        subject = "Password reset successfully"
-		data["template_file"] = templateFile 
+		subject = "Password reset successfully"
+		data["template_file"] = templateFile
 		data["subject"] = subject
 	}
-    return data
+	return data
 }
 
 type EmailContext struct {
-	Name			string
-	Otp				*uint32
+	Name string
+	Otp *uint32
 }
 
-func SendEmail(user *ent.User, emailType string, code *uint32) {
-	cfg := GetConfig()
-	if cfg.Environment == "test" {
+func SendEmail(user *ent.User, emailType EmailTypeChoice, otp *uint32) {
+	if os.Getenv("ENVIRONMENT") == "test" {
 		return
 	}
-
-	emailData := sortEmail(emailType, code)
+	cfg := GetConfig()
+	emailData := sortEmail(emailType, otp)
 	templateFile := emailData["template_file"]
 	subject := emailData["subject"]
 
@@ -64,8 +76,8 @@ func SendEmail(user *ent.User, emailType string, code *uint32) {
 		Name: user.Name,
 	}
 	if otp, ok := emailData["otp"]; ok {
-		code := otp.(*uint32)
-		data.Otp = code
+		otp := otp.(*uint32)
+		data.Otp = otp
 	}
 
 	// Read the HTML file content
@@ -80,7 +92,7 @@ func SendEmail(user *ent.User, emailType string, code *uint32) {
 	if err != nil {
 		log.Fatal("Error reading HTML file:", err)
 	}
-	
+
 	// Create a new template from the HTML file content
 	tmpl, err := template.New("email_template").Parse(string(htmlContent))
 	if err != nil {
@@ -94,17 +106,16 @@ func SendEmail(user *ent.User, emailType string, code *uint32) {
 	}
 
 	// Create a new message
-	m := gomail.NewMessage()
-	m.SetHeader("From", cfg.MailSenderEmail)
+	m := mail.NewMessage()
+	m.SetHeader("From", cfg.MailFrom)
 	m.SetHeader("To", user.Email)
 	m.SetHeader("Subject", subject.(string))
 	m.SetBody("text/html", bodyContent.String())
 
 	// Create a new SMTP client
-	d := gomail.NewDialer(cfg.MailSenderHost, cfg.MailSenderPort, cfg.MailSenderEmail, cfg.MailSenderPassword)
-
+	d := mail.NewDialer(cfg.MailSenderHost, cfg.MailSenderPort, cfg.MailSenderEmail, cfg.MailSenderPassword)
 	// Send the email
 	if err := d.DialAndSend(m); err != nil {
-		log.Fatal("Error sending email:", err)
+		log.Println("Error sending email:", err)
 	}
 }
