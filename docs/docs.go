@@ -23,7 +23,7 @@ const docTemplate = `{
     "paths": {
         "/auth/register": {
             "post": {
-                "description": "This endpoint registers new users into our application.",
+                "description": "` + "`" + `This endpoint registers new users into our application.` + "`" + `",
                 "tags": [
                     "Auth"
                 ],
@@ -49,7 +49,93 @@ const docTemplate = `{
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/config.ErrorResponse"
+                            "$ref": "#/definitions/base.ValidationErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/resend-verification-email": {
+            "post": {
+                "description": "` + "`" + `This endpoint resends new otp to the user's email.` + "`" + `",
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Resend Verification Email",
+                "parameters": [
+                    {
+                        "description": "Email object",
+                        "name": "email",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accounts.EmailRequestSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/base.ResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/verify-email": {
+            "post": {
+                "description": "` + "`" + `This endpoint verifies a user's email.` + "`" + `",
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verify a user's email",
+                "parameters": [
+                    {
+                        "description": "Email object",
+                        "name": "email_data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accounts.VerifyEmailRequestSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/base.ResponseSchema"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.InvalidErrorExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
                         }
                     }
                 }
@@ -152,23 +238,85 @@ const docTemplate = `{
                 }
             }
         },
-        "config.ErrorResponse": {
+        "accounts.VerifyEmailRequestSchema": {
+            "type": "object",
+            "required": [
+                "email",
+                "otp"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "minLength": 5,
+                    "example": "johndoe@email.com"
+                },
+                "otp": {
+                    "type": "integer",
+                    "example": 123456
+                }
+            }
+        },
+        "base.FieldData": {
             "type": "object",
             "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "data": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
+                "field": {
+                    "type": "string",
+                    "example": "This field is required"
+                }
+            }
+        },
+        "base.InvalidErrorExample": {
+            "type": "object",
+            "properties": {
                 "message": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Request was invalid due to ..."
                 },
                 "status": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "failure"
+                }
+            }
+        },
+        "base.NotFoundErrorExample": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "The item was not found"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "failure"
+                }
+            }
+        },
+        "base.ResponseSchema": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "base.ValidationErrorExample": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/base.FieldData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Invalid Entry"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "failure"
                 }
             }
         },

@@ -20,6 +20,8 @@ func SetupRoutes(app *fiber.App, db *ent.Client) {
 	// Auth Routes (1)
 	authRouter := api.Group("/auth")
 	authRouter.Post("/register", accounts.Register(db))
+	authRouter.Post("/verify-email", accounts.VerifyEmail(db))
+	authRouter.Post("/resend-verification-email", accounts.ResendVerificationEmail(db))
 }
 
 type HealthCheckSchema struct {

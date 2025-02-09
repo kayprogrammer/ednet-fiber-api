@@ -60,10 +60,9 @@ func (obj UserManager) GetByUsernames(db *ent.Client, ctx context.Context, usern
 }
 
 func (obj UserManager) Create(db *ent.Client, ctx context.Context, userData RegisterSchema, isStaff bool, isVerified bool) *ent.User {
-	cfg := config.GetConfig()
 	password := config.HashPassword(userData.Password)
-	otp := config.GetRandomInt(6)
-	otpExpiry := time.Now().UTC().Add(time.Duration(cfg.EmailOtpExpireMinutes) * time.Minute)
+	otp, otpExp := obj.GetOtp()
+
 	u := db.User.Create().
 		SetName(userData.Name).
 		SetEmail(userData.Email).
@@ -72,9 +71,20 @@ func (obj UserManager) Create(db *ent.Client, ctx context.Context, userData Regi
 		SetIsStaff(isStaff).
 		SetIsVerified(isVerified).
 		SetOtp(otp).
-		SetOtpExpiry(otpExpiry).
+		SetOtpExpiry(otpExp).
 		SaveX(ctx)
 	return u
+}
+
+func (obj UserManager) GetOtp () (uint32, time.Time) {
+	cfg := config.GetConfig()
+	otp := config.GetRandomInt(6)
+	otpExpiry := time.Now().UTC().Add(time.Duration(cfg.EmailOtpExpireMinutes) * time.Minute)
+	return otp, otpExpiry
+}
+
+func (obj UserManager) IsOtpExpired (user *ent.User) bool {
+	return time.Now().UTC().After(user.OtpExpiry.UTC())
 }
 
 func (obj UserManager) GetOrCreate(db *ent.Client, ctx context.Context, userData RegisterSchema, isVerified bool, isStaff bool) *ent.User {

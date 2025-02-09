@@ -47,17 +47,61 @@ definitions:
     - password
     - username
     type: object
-  config.ErrorResponse:
+  accounts.VerifyEmailRequestSchema:
     properties:
-      code:
+      email:
+        example: johndoe@email.com
+        minLength: 5
         type: string
-      data:
-        additionalProperties:
-          type: string
-        type: object
+      otp:
+        example: 123456
+        type: integer
+    required:
+    - email
+    - otp
+    type: object
+  base.FieldData:
+    properties:
+      field:
+        example: This field is required
+        type: string
+    type: object
+  base.InvalidErrorExample:
+    properties:
       message:
+        example: Request was invalid due to ...
         type: string
       status:
+        example: failure
+        type: string
+    type: object
+  base.NotFoundErrorExample:
+    properties:
+      message:
+        example: The item was not found
+        type: string
+      status:
+        example: failure
+        type: string
+    type: object
+  base.ResponseSchema:
+    properties:
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  base.ValidationErrorExample:
+    properties:
+      data:
+        $ref: '#/definitions/base.FieldData'
+      message:
+        example: Invalid Entry
+        type: string
+      status:
+        example: failure
         type: string
     type: object
   general.SiteDetailResponseSchema:
@@ -137,7 +181,7 @@ info:
 paths:
   /auth/register:
     post:
-      description: This endpoint registers new users into our application.
+      description: '`This endpoint registers new users into our application.`'
       parameters:
       - description: User object
         in: body
@@ -153,8 +197,64 @@ paths:
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/config.ErrorResponse'
+            $ref: '#/definitions/base.ValidationErrorExample'
       summary: Register a new user
+      tags:
+      - Auth
+  /auth/resend-verification-email:
+    post:
+      description: '`This endpoint resends new otp to the user''s email.`'
+      parameters:
+      - description: Email object
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/accounts.EmailRequestSchema'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.ResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      summary: Resend Verification Email
+      tags:
+      - Auth
+  /auth/verify-email:
+    post:
+      description: '`This endpoint verifies a user''s email.`'
+      parameters:
+      - description: Email object
+        in: body
+        name: email_data
+        required: true
+        schema:
+          $ref: '#/definitions/accounts.VerifyEmailRequestSchema'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.ResponseSchema'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.InvalidErrorExample'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      summary: Verify a user's email
       tags:
       - Auth
   /general/site-detail:
