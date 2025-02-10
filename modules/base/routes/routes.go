@@ -22,6 +22,8 @@ func SetupRoutes(app *fiber.App, db *ent.Client) {
 	authRouter.Post("/register", accounts.Register(db))
 	authRouter.Post("/verify-email", accounts.VerifyEmail(db))
 	authRouter.Post("/resend-verification-email", accounts.ResendVerificationEmail(db))
+	authRouter.Post("/send-password-reset-otp", accounts.SendPasswordResetOtp(db))
+	authRouter.Post("/set-new-password", accounts.SetNewPassword(db))
 }
 
 type HealthCheckSchema struct {

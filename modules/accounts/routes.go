@@ -22,7 +22,7 @@ func Register(db *ent.Client) fiber.Handler {
 		data := RegisterSchema{}
 		// Validate request
 		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
-			return c.Status(*errCode).JSON(errData)
+			return config.APIError(c, *errCode, *errData)
 		}
 
 		userByEmail := userManager.GetByEmail(db, ctx, data.Email)
@@ -63,7 +63,7 @@ func VerifyEmail(db *ent.Client) fiber.Handler {
 		data := VerifyEmailRequestSchema{}
 		// Validate request
 		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
-			return c.Status(*errCode).JSON(errData)
+			return config.APIError(c, *errCode, *errData)
 		}
 		user := userManager.GetByEmail(db, ctx, data.Email)
 		if user == nil {
@@ -105,7 +105,7 @@ func ResendVerificationEmail(db *ent.Client) fiber.Handler {
 
 		// Validate request
 		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
-			return c.Status(*errCode).JSON(errData)
+			return config.APIError(c, *errCode, *errData)
 		}
 
 		user := userManager.GetByEmail(db, ctx, data.Email)
@@ -122,5 +122,75 @@ func ResendVerificationEmail(db *ent.Client) fiber.Handler {
 		user.Update().SetOtp(otp).SetOtpExpiry(otpExp).Save(ctx)
 		go config.SendEmail(user, config.ET_ACTIVATE, &otp)
 		return c.Status(200).JSON(base.ResponseMessage("Verification email sent"))
+	}
+}
+
+// @Summary Send Password Reset Otp
+// @Description This endpoint sends new password reset otp to the user's email.
+// @Tags Auth
+// @Param email body EmailRequestSchema true "Email object"
+// @Success 200 {object} base.ResponseSchema
+// @Failure 422 {object} base.ValidationErrorExample
+// @Failure 404 {object} base.NotFoundErrorExample
+// @Router /auth/send-password-reset-otp [post]
+func SendPasswordResetOtp(db *ent.Client) fiber.Handler {
+	return func (c *fiber.Ctx) error {
+		ctx := c.Context()
+		data := EmailRequestSchema{}
+
+		// Validate request
+		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+
+		user := userManager.GetByEmail(db, ctx, data.Email)
+		if user == nil {
+			return config.APIError(c, 404, config.RequestErr(config.ERR_INCORRECT_EMAIL, "Incorrect Email"))
+		}
+
+		// Send Email
+		otp, otpExp := userManager.GetOtp()
+		user.Update().SetOtp(otp).SetOtpExpiry(otpExp).Save(ctx)
+		go config.SendEmail(user, config.ET_RESET, &otp)
+		return c.Status(200).JSON(base.ResponseMessage("Password otp sent"))
+	}
+}
+// @Summary Set New Password
+// @Description This endpoint verifies the password reset otp.
+// @Tags Auth
+// @Param email body SetNewPasswordSchema true "Password reset object"
+// @Success 200 {object} base.ResponseSchema
+// @Failure 422 {object} base.ValidationErrorExample
+// @Failure 404 {object} base.NotFoundErrorExample
+// @Failure 400 {object} base.InvalidErrorExample
+// @Router /auth/set-new-password [post]
+func SetNewPassword(db *ent.Client) fiber.Handler {
+	return func (c *fiber.Ctx) error {
+		ctx := c.Context()
+		data := SetNewPasswordSchema{}
+
+		// Validate request
+		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+		user := userManager.GetByEmail(db, ctx, data.Email)
+		if user == nil {
+			return config.APIError(c, 404, config.RequestErr(config.ERR_INCORRECT_EMAIL, "Incorrect Email"))
+		}
+
+		if user.Otp == nil || *user.Otp != data.Otp {
+			return config.APIError(c, 404, config.RequestErr(config.ERR_INCORRECT_OTP, "Incorrect Otp"))
+		}
+
+		if userManager.IsOtpExpired(user) {
+			return config.APIError(c, 400, config.RequestErr(config.ERR_EXPIRED_OTP, "Expired Otp"))
+		}
+
+		// Set Password
+		user.Update().SetPassword(config.HashPassword(data.Password)).Save(ctx)
+
+		// Send Email
+		go config.SendEmail(user, config.ET_RESET_SUCC, nil)
+		return c.Status(200).JSON(base.ResponseMessage("Password reset successful"))
 	}
 }

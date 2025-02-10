@@ -47,6 +47,25 @@ definitions:
     - password
     - username
     type: object
+  accounts.SetNewPasswordSchema:
+    properties:
+      email:
+        example: johndoe@email.com
+        minLength: 5
+        type: string
+      otp:
+        example: 123456
+        type: integer
+      password:
+        example: newstrongpassword
+        maxLength: 50
+        minLength: 8
+        type: string
+    required:
+    - email
+    - otp
+    - password
+    type: object
   accounts.VerifyEmailRequestSchema:
     properties:
       email:
@@ -225,6 +244,62 @@ paths:
           schema:
             $ref: '#/definitions/base.ValidationErrorExample'
       summary: Resend Verification Email
+      tags:
+      - Auth
+  /auth/send-password-reset-otp:
+    post:
+      description: This endpoint sends new password reset otp to the user's email.
+      parameters:
+      - description: Email object
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/accounts.EmailRequestSchema'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.ResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      summary: Send Password Reset Otp
+      tags:
+      - Auth
+  /auth/set-new-password:
+    post:
+      description: This endpoint verifies the password reset otp.
+      parameters:
+      - description: Password reset object
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/accounts.SetNewPasswordSchema'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.ResponseSchema'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.InvalidErrorExample'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      summary: Set New Password
       tags:
       - Auth
   /auth/verify-email:

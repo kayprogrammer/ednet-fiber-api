@@ -88,6 +88,92 @@
                 }
             }
         },
+        "/auth/send-password-reset-otp": {
+            "post": {
+                "description": "This endpoint sends new password reset otp to the user's email.",
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Send Password Reset Otp",
+                "parameters": [
+                    {
+                        "description": "Email object",
+                        "name": "email",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accounts.EmailRequestSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/base.ResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/set-new-password": {
+            "post": {
+                "description": "This endpoint verifies the password reset otp.",
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Set New Password",
+                "parameters": [
+                    {
+                        "description": "Password reset object",
+                        "name": "email",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accounts.SetNewPasswordSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/base.ResponseSchema"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.InvalidErrorExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/verify-email": {
             "post": {
                 "description": "`This endpoint verifies a user's email.`",
@@ -228,6 +314,31 @@
                     "type": "string",
                     "maxLength": 50,
                     "example": "johndoe"
+                }
+            }
+        },
+        "accounts.SetNewPasswordSchema": {
+            "type": "object",
+            "required": [
+                "email",
+                "otp",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "minLength": 5,
+                    "example": "johndoe@email.com"
+                },
+                "otp": {
+                    "type": "integer",
+                    "example": 123456
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 8,
+                    "example": "newstrongpassword"
                 }
             }
         },
