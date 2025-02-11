@@ -99,7 +99,7 @@ func VerifyEmail(db *ent.Client) fiber.Handler {
 // @Failure 404 {object} base.NotFoundErrorExample
 // @Router /auth/resend-verification-email [post]
 func ResendVerificationEmail(db *ent.Client) fiber.Handler {
-	return func (c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		data := EmailRequestSchema{}
 
@@ -126,7 +126,7 @@ func ResendVerificationEmail(db *ent.Client) fiber.Handler {
 }
 
 // @Summary Send Password Reset Otp
-// @Description This endpoint sends new password reset otp to the user's email.
+// @Description `This endpoint sends new password reset otp to the user's email.`
 // @Tags Auth
 // @Param email body EmailRequestSchema true "Email object"
 // @Success 200 {object} base.ResponseSchema
@@ -134,7 +134,7 @@ func ResendVerificationEmail(db *ent.Client) fiber.Handler {
 // @Failure 404 {object} base.NotFoundErrorExample
 // @Router /auth/send-password-reset-otp [post]
 func SendPasswordResetOtp(db *ent.Client) fiber.Handler {
-	return func (c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		data := EmailRequestSchema{}
 
@@ -155,8 +155,9 @@ func SendPasswordResetOtp(db *ent.Client) fiber.Handler {
 		return c.Status(200).JSON(base.ResponseMessage("Password otp sent"))
 	}
 }
+
 // @Summary Set New Password
-// @Description This endpoint verifies the password reset otp.
+// @Description `This endpoint verifies the password reset otp.`
 // @Tags Auth
 // @Param email body SetNewPasswordSchema true "Password reset object"
 // @Success 200 {object} base.ResponseSchema
@@ -165,7 +166,7 @@ func SendPasswordResetOtp(db *ent.Client) fiber.Handler {
 // @Failure 400 {object} base.InvalidErrorExample
 // @Router /auth/set-new-password [post]
 func SetNewPassword(db *ent.Client) fiber.Handler {
-	return func (c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		data := SetNewPasswordSchema{}
 
@@ -192,5 +193,152 @@ func SetNewPassword(db *ent.Client) fiber.Handler {
 		// Send Email
 		go config.SendEmail(user, config.ET_RESET_SUCC, nil)
 		return c.Status(200).JSON(base.ResponseMessage("Password reset successful"))
+	}
+}
+
+// @Summary Login a user
+// @Description `This endpoint generates new access and refresh tokens for authentication`
+// @Tags Auth
+// @Param user body LoginSchema true "User login"
+// @Success 201 {object} LoginResponseSchema
+// @Failure 422 {object} base.ValidationErrorExample
+// @Failure 401 {object} base.UnauthorizedErrorExample
+// @Router /auth/login [post]
+func Login(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		data := LoginSchema{}
+
+		// Validate request
+		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+
+		user := userManager.GetByEmailOrUsername(db, ctx, data.EmailOrUsername)
+		if user == nil {
+			return config.APIError(c, 401, config.RequestErr(config.ERR_INVALID_CREDENTIALS, "Invalid Credentials"))
+		}
+		if !user.IsVerified {
+			return config.APIError(c, 401, config.RequestErr(config.ERR_UNVERIFIED_USER, "Verify your email first"))
+		}
+
+		// Create Auth Tokens
+		access := GenerateAccessToken(user.ID, user.Username)
+		refresh := GenerateRefreshToken()
+		userManager.AddTokens(db, ctx, user, access, refresh)
+
+		response := LoginResponseSchema{
+			ResponseSchema: base.ResponseMessage("Login successful"),
+			Data:           TokensResponseSchema{Access: access, Refresh: refresh},
+		}
+		return c.Status(201).JSON(response)
+	}
+}
+
+// @Summary Login a user via google
+// @Description `This endpoint generates new access and refresh tokens for authentication via google`
+// @Description `Pass in token gotten from gsi client authentication here in payload to retrieve tokens for authorization`
+// @Tags Auth
+// @Param user body TokenSchema true "Google auth"
+// @Success 201 {object} LoginResponseSchema
+// @Failure 422 {object} base.ValidationErrorExample
+// @Failure 401 {object} base.UnauthorizedErrorExample
+// @Router /auth/google [post]
+func GoogleLogin(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		data := TokenSchema{}
+
+		// Validate request
+		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
+			return c.Status(*errCode).JSON(errData)
+		}
+
+		userGoogleData, errData := ConvertGoogleToken(ctx, data.Token)
+		if errData != nil {
+			return config.APIError(c, 401, *errData)
+		}
+
+		email := userGoogleData.Email
+		name := userGoogleData.Name
+		avatar := userGoogleData.Picture
+
+		access, refresh, err := RegisterSocialUser(db, ctx, email, name, &avatar)
+		if err != nil {
+			return c.Status(401).JSON(err)
+		}
+		response := LoginResponseSchema{
+			ResponseSchema: base.ResponseMessage("Login successful"),
+			Data:           TokensResponseSchema{Access: *access, Refresh: *refresh},
+		}
+		return c.Status(201).JSON(response)
+	}
+}
+
+// @Summary Refresh tokens
+// @Description `This endpoint refresh tokens by generating new access and refresh tokens for a user`
+// @Tags Auth
+// @Param refresh body TokenSchema true "Refresh token"
+// @Success 201 {object} LoginResponseSchema
+// @Failure 422 {object} base.ValidationErrorExample
+// @Failure 401 {object} base.UnauthorizedErrorExample
+// @Router /auth/refresh [post]
+func Refresh(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		data := TokenSchema{}
+
+		// Validate request
+		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+
+		token := data.Token
+		user := DecodeRefreshToken(db, ctx, token)
+		if user == nil {
+			return config.APIError(c, 401, config.RequestErr(config.ERR_INVALID_TOKEN, "Refresh token is invalid or expired"))
+		}
+
+		// Create and Update Auth Tokens
+		access := GenerateAccessToken(user.ID, user.Username)
+		refresh := GenerateRefreshToken()
+		userManager.UpdateTokens(db, ctx, access, refresh, token)
+
+		response := LoginResponseSchema{
+			ResponseSchema: base.ResponseMessage("Tokens refresh successful"),
+			Data:           TokensResponseSchema{Access: access, Refresh: refresh},
+		}
+		return c.Status(201).JSON(response)
+	}
+}
+
+// @Summary Logout a user
+// @Description This endpoint logs a user out from our application from a single device
+// @Tags Auth
+// @Success 200 {object} base.ResponseSchema
+// @Failure 401 {object} base.UnauthorizedErrorExample
+// @Router /auth/logout [get]
+// @Security BearerAuth
+func Logout(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := c.Locals("user").(*ent.User)
+		user.Update().RemoveTokens(&ent.Token{Access: c.Get("Authorization")[7:]}).Save(ctx)
+		return c.Status(200).JSON(base.ResponseMessage("Logout successful"))
+	}
+}
+
+// @Summary Logout a user
+// @Description This endpoint logs a user out from our application from all devices
+// @Tags Auth
+// @Success 200 {object} base.ResponseSchema
+// @Failure 401 {object} base.UnauthorizedErrorExample
+// @Router /auth/logout [get]
+// @Security BearerAuth
+func LogoutAll(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user := base.RequestUser(c)
+		user.Update().ClearTokens().Save(c.Context())
+		return c.Status(200).JSON(base.ResponseMessage("Logout successful"))
 	}
 }

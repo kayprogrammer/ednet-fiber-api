@@ -2,6 +2,7 @@ package schemas
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -33,13 +34,41 @@ func (User) Fields() []ent.Field {
 			Optional().Nillable(),
 		field.String("avatar").
 			Optional().Nillable(),
-		field.String("access").
-			Optional().Nillable(),
-		field.String("refresh").
-			Optional().Nillable(),
 		field.Uint32("otp").
 			Optional().Nillable(),
-		field.Time("otpExpiry").
+		field.Time("otp_expiry").
 			Optional().Nillable(),
+		field.Bool("social_login").
+			Default(false),
 	)
+}
+
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("tokens", Token.Type),
+    }
+}
+
+// Token holds authentication tokens for users.
+type Token struct {
+    ent.Schema
+}
+
+// Fields of the Token.
+func (Token) Fields() []ent.Field {
+    return []ent.Field{
+        field.String("access").NotEmpty(),
+        field.String("refresh").NotEmpty(),
+    }
+}
+
+// Edges of the Token.
+func (Token) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.From("user", User.Type).
+            Ref("tokens").
+            Unique().
+            Required(),
+    }
 }

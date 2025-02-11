@@ -17,13 +17,18 @@ func SetupRoutes(app *fiber.App, db *ent.Client) {
 	generalRouter := api.Group("/general")
 	generalRouter.Get("/site-detail", general.GetSiteDetails(db))
 
-	// Auth Routes (1)
+	// Auth Routes (10)
 	authRouter := api.Group("/auth")
 	authRouter.Post("/register", accounts.Register(db))
 	authRouter.Post("/verify-email", accounts.VerifyEmail(db))
 	authRouter.Post("/resend-verification-email", accounts.ResendVerificationEmail(db))
 	authRouter.Post("/send-password-reset-otp", accounts.SendPasswordResetOtp(db))
 	authRouter.Post("/set-new-password", accounts.SetNewPassword(db))
+	authRouter.Post("/login", accounts.Login(db))
+	authRouter.Post("/google-login", accounts.GoogleLogin(db))
+	authRouter.Post("/refresh", accounts.Refresh(db))
+	authRouter.Post("/logout", accounts.Logout(db))
+	authRouter.Post("/logout/all", accounts.LogoutAll(db))
 }
 
 type HealthCheckSchema struct {

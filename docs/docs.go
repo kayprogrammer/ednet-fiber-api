@@ -21,6 +21,154 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/google": {
+            "post": {
+                "description": "` + "`" + `This endpoint generates new access and refresh tokens for authentication via google` + "`" + `\n` + "`" + `Pass in token gotten from gsi client authentication here in payload to retrieve tokens for authorization` + "`" + `",
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login a user via google",
+                "parameters": [
+                    {
+                        "description": "Google auth",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accounts.TokenSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/accounts.LoginResponseSchema"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/base.UnauthorizedErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "description": "` + "`" + `This endpoint generates new access and refresh tokens for authentication` + "`" + `",
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login a user",
+                "parameters": [
+                    {
+                        "description": "User login",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accounts.LoginSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/accounts.LoginResponseSchema"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/base.UnauthorizedErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint logs a user out from our application from all devices",
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout a user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/base.ResponseSchema"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/base.UnauthorizedErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "description": "` + "`" + `This endpoint refresh tokens by generating new access and refresh tokens for a user` + "`" + `",
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh tokens",
+                "parameters": [
+                    {
+                        "description": "Refresh token",
+                        "name": "refresh",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accounts.TokenSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/accounts.LoginResponseSchema"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/base.UnauthorizedErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/register": {
             "post": {
                 "description": "` + "`" + `This endpoint registers new users into our application.` + "`" + `",
@@ -97,7 +245,7 @@ const docTemplate = `{
         },
         "/auth/send-password-reset-otp": {
             "post": {
-                "description": "This endpoint sends new password reset otp to the user's email.",
+                "description": "` + "`" + `This endpoint sends new password reset otp to the user's email.` + "`" + `",
                 "tags": [
                     "Auth"
                 ],
@@ -137,7 +285,7 @@ const docTemplate = `{
         },
         "/auth/set-new-password": {
             "post": {
-                "description": "This endpoint verifies the password reset otp.",
+                "description": "` + "`" + `This endpoint verifies the password reset otp.` + "`" + `",
                 "tags": [
                     "Auth"
                 ],
@@ -276,6 +424,39 @@ const docTemplate = `{
                 }
             }
         },
+        "accounts.LoginResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/accounts.TokensResponseSchema"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "accounts.LoginSchema": {
+            "type": "object",
+            "required": [
+                "email_or_username",
+                "password"
+            ],
+            "properties": {
+                "email_or_username": {
+                    "type": "string",
+                    "example": "johndoe"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
         "accounts.RegisterResponseSchema": {
             "type": "object",
             "properties": {
@@ -349,6 +530,29 @@ const docTemplate = `{
                 }
             }
         },
+        "accounts.TokenSchema": {
+            "type": "object",
+            "required": [
+                "token"
+            ],
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InNpbXBsZWlkIiwiZXhwIjoxMjU3ODk0MzAwfQ.Ys_jP70xdxch32hFECfJQuvpvU5_IiTIN2pJJv68EqQ"
+                }
+            }
+        },
+        "accounts.TokensResponseSchema": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string"
+                },
+                "refresh": {
+                    "type": "string"
+                }
+            }
+        },
         "accounts.VerifyEmailRequestSchema": {
             "type": "object",
             "required": [
@@ -412,6 +616,19 @@ const docTemplate = `{
                 "status": {
                     "type": "string",
                     "example": "success"
+                }
+            }
+        },
+        "base.UnauthorizedErrorExample": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Unauthorized user/Invalid credentials/Invalid Token"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "failure"
                 }
             }
         },

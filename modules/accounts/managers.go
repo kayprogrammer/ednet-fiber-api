@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/token"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 )
 
@@ -24,10 +25,10 @@ func (obj UserManager) GetById(db *ent.Client, ctx context.Context, id uuid.UUID
 	return u
 }
 
-func (obj UserManager) GetByRefreshToken(db *ent.Client, ctx context.Context, token string) *ent.User {
+func (obj UserManager) GetByRefreshToken(db *ent.Client, ctx context.Context, tokenStr string) *ent.User {
 	u, _ := db.User.
 		Query().
-		Where(user.Refresh(token)).
+		Where(user.HasTokensWith(token.Refresh(tokenStr))).
 		Only(ctx)
 	return u
 }
@@ -44,6 +45,19 @@ func (obj UserManager) GetByUsername(db *ent.Client, ctx context.Context, userna
 	u, _ := db.User.
 		Query().
 		Where(user.Username(username)).
+		Only(ctx)
+	return u
+}
+
+func (obj UserManager) GetByEmailOrUsername(db *ent.Client, ctx context.Context, emailOrUsername string) *ent.User {
+	u, _ := db.User.
+		Query().
+		Where(
+			user.Or(
+				user.Email(emailOrUsername), 
+				user.Username(emailOrUsername),
+			),
+		).
 		Only(ctx)
 	return u
 }
@@ -96,9 +110,17 @@ func (obj UserManager) GetOrCreate(db *ent.Client, ctx context.Context, userData
 	return user
 }
 
-func (obj UserManager) UpdateTokens(ctx context.Context, user *ent.User, access string, refresh string) *ent.User {
-	u := user.Update().SetAccess(access).SetRefresh(refresh).SaveX(ctx)
-	return u
+func (obj UserManager) AddTokens(db *ent.Client, ctx context.Context, user *ent.User, access string, refresh string) {
+	user.Update().AddTokens(&ent.Token{Access: access, Refresh: refresh}).Save(ctx)
+}
+
+func (obj UserManager) UpdateTokens(db *ent.Client, ctx context.Context, access string, refresh string, oldRefresh string) {
+	db.Token.
+        Update().
+        Where(token.Refresh(oldRefresh)).
+        SetAccess(access).
+        SetRefresh(refresh).
+        Save(ctx)
 }
 
 func (obj UserManager) DropData(db *ent.Client, ctx context.Context) {

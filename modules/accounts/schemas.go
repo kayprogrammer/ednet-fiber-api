@@ -29,7 +29,7 @@ type LoginSchema struct {
 	Password        string `json:"password" validate:"required" example:"password"`
 }
 
-type RefreshTokenSchema struct {
+type TokenSchema struct {
 	Token string `json:"token" validate:"required" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InNpbXBsZWlkIiwiZXhwIjoxMjU3ODk0MzAwfQ.Ys_jP70xdxch32hFECfJQuvpvU5_IiTIN2pJJv68EqQ"`
 }
 

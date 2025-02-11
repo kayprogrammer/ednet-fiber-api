@@ -11,6 +11,29 @@ definitions:
     required:
     - email
     type: object
+  accounts.LoginResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/accounts.TokensResponseSchema'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  accounts.LoginSchema:
+    properties:
+      email_or_username:
+        example: johndoe
+        type: string
+      password:
+        example: password
+        type: string
+    required:
+    - email_or_username
+    - password
+    type: object
   accounts.RegisterResponseSchema:
     properties:
       data:
@@ -66,6 +89,21 @@ definitions:
     - otp
     - password
     type: object
+  accounts.TokenSchema:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InNpbXBsZWlkIiwiZXhwIjoxMjU3ODk0MzAwfQ.Ys_jP70xdxch32hFECfJQuvpvU5_IiTIN2pJJv68EqQ
+        type: string
+    required:
+    - token
+    type: object
+  accounts.TokensResponseSchema:
+    properties:
+      access:
+        type: string
+      refresh:
+        type: string
+    type: object
   accounts.VerifyEmailRequestSchema:
     properties:
       email:
@@ -110,6 +148,15 @@ definitions:
         type: string
       status:
         example: success
+        type: string
+    type: object
+  base.UnauthorizedErrorExample:
+    properties:
+      message:
+        example: Unauthorized user/Invalid credentials/Invalid Token
+        type: string
+      status:
+        example: failure
         type: string
     type: object
   base.ValidationErrorExample:
@@ -198,6 +245,104 @@ info:
   title: EDNET API
   version: "1.0"
 paths:
+  /auth/google:
+    post:
+      description: |-
+        `This endpoint generates new access and refresh tokens for authentication via google`
+        `Pass in token gotten from gsi client authentication here in payload to retrieve tokens for authorization`
+      parameters:
+      - description: Google auth
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/accounts.TokenSchema'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/accounts.LoginResponseSchema'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.UnauthorizedErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      summary: Login a user via google
+      tags:
+      - Auth
+  /auth/login:
+    post:
+      description: '`This endpoint generates new access and refresh tokens for authentication`'
+      parameters:
+      - description: User login
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/accounts.LoginSchema'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/accounts.LoginResponseSchema'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.UnauthorizedErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      summary: Login a user
+      tags:
+      - Auth
+  /auth/logout:
+    get:
+      description: This endpoint logs a user out from our application from all devices
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.ResponseSchema'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.UnauthorizedErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Logout a user
+      tags:
+      - Auth
+  /auth/refresh:
+    post:
+      description: '`This endpoint refresh tokens by generating new access and refresh
+        tokens for a user`'
+      parameters:
+      - description: Refresh token
+        in: body
+        name: refresh
+        required: true
+        schema:
+          $ref: '#/definitions/accounts.TokenSchema'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/accounts.LoginResponseSchema'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.UnauthorizedErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      summary: Refresh tokens
+      tags:
+      - Auth
   /auth/register:
     post:
       description: '`This endpoint registers new users into our application.`'
@@ -248,7 +393,7 @@ paths:
       - Auth
   /auth/send-password-reset-otp:
     post:
-      description: This endpoint sends new password reset otp to the user's email.
+      description: '`This endpoint sends new password reset otp to the user''s email.`'
       parameters:
       - description: Email object
         in: body
@@ -274,7 +419,7 @@ paths:
       - Auth
   /auth/set-new-password:
     post:
-      description: This endpoint verifies the password reset otp.
+      description: '`This endpoint verifies the password reset otp.`'
       parameters:
       - description: Password reset object
         in: body

@@ -19,6 +19,11 @@ type NotFoundErrorExample struct {
 	Message string `json:"message" example:"The item was not found"`
 }
 
+type UnauthorizedErrorExample struct {
+	StatusData
+	Message string `json:"message" example:"Unauthorized user/Invalid credentials/Invalid Token"`
+}
+
 type InvalidErrorExample struct {
 	StatusData
 	Message string `json:"message" example:"Request was invalid due to ..."`
