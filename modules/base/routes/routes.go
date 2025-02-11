@@ -27,8 +27,8 @@ func SetupRoutes(app *fiber.App, db *ent.Client) {
 	authRouter.Post("/login", accounts.Login(db))
 	authRouter.Post("/google-login", accounts.GoogleLogin(db))
 	authRouter.Post("/refresh", accounts.Refresh(db))
-	authRouter.Post("/logout", accounts.Logout(db))
-	authRouter.Post("/logout/all", accounts.LogoutAll(db))
+	authRouter.Get("/logout", accounts.AuthMiddleware(db), accounts.Logout(db))
+	authRouter.Get("/logout/all", accounts.AuthMiddleware(db), accounts.LogoutAll(db))
 }
 
 type HealthCheckSchema struct {

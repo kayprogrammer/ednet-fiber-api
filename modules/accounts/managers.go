@@ -111,7 +111,12 @@ func (obj UserManager) GetOrCreate(db *ent.Client, ctx context.Context, userData
 }
 
 func (obj UserManager) AddTokens(db *ent.Client, ctx context.Context, user *ent.User, access string, refresh string) {
-	user.Update().AddTokens(&ent.Token{Access: access, Refresh: refresh}).Save(ctx)
+	db.Token.
+        Create().
+		SetUser(user).
+        SetAccess(access).
+        SetRefresh(refresh).
+        SaveX(ctx)
 }
 
 func (obj UserManager) UpdateTokens(db *ent.Client, ctx context.Context, access string, refresh string, oldRefresh string) {
@@ -120,7 +125,21 @@ func (obj UserManager) UpdateTokens(db *ent.Client, ctx context.Context, access 
         Where(token.Refresh(oldRefresh)).
         SetAccess(access).
         SetRefresh(refresh).
-        Save(ctx)
+        SaveX(ctx)
+}
+
+func (obj UserManager) DeleteToken(db *ent.Client, ctx context.Context, access string) {
+	db.Token.
+        Delete().
+        Where(token.Access(access)).
+		ExecX(ctx)
+}
+
+func (obj UserManager) ClearTokens(db *ent.Client, ctx context.Context, userID uuid.UUID) {
+	db.Token.
+        Delete().
+        Where(token.HasUserWith(user.ID(userID))).
+		ExecX(ctx)
 }
 
 func (obj UserManager) DropData(db *ent.Client, ctx context.Context) {

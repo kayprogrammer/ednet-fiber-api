@@ -313,7 +313,7 @@ func Refresh(db *ent.Client) fiber.Handler {
 }
 
 // @Summary Logout a user
-// @Description This endpoint logs a user out from our application from a single device
+// @Description `This endpoint logs a user out from our application from a single device`
 // @Tags Auth
 // @Success 200 {object} base.ResponseSchema
 // @Failure 401 {object} base.UnauthorizedErrorExample
@@ -321,24 +321,22 @@ func Refresh(db *ent.Client) fiber.Handler {
 // @Security BearerAuth
 func Logout(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		ctx := c.Context()
-		user := c.Locals("user").(*ent.User)
-		user.Update().RemoveTokens(&ent.Token{Access: c.Get("Authorization")[7:]}).Save(ctx)
+		userManager.DeleteToken(db, c.Context(), c.Get("Authorization")[7:])
 		return c.Status(200).JSON(base.ResponseMessage("Logout successful"))
 	}
 }
 
-// @Summary Logout a user
-// @Description This endpoint logs a user out from our application from all devices
+// @Summary Logout a user from all devices
+// @Description `This endpoint logs a user out from our application from all devices`
 // @Tags Auth
 // @Success 200 {object} base.ResponseSchema
 // @Failure 401 {object} base.UnauthorizedErrorExample
-// @Router /auth/logout [get]
+// @Router /auth/logout/all [get]
 // @Security BearerAuth
 func LogoutAll(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		user := base.RequestUser(c)
-		user.Update().ClearTokens().Save(c.Context())
+		userManager.ClearTokens(db, c.Context(), user.ID)
 		return c.Status(200).JSON(base.ResponseMessage("Logout successful"))
 	}
 }

@@ -301,7 +301,8 @@ paths:
       - Auth
   /auth/logout:
     get:
-      description: This endpoint logs a user out from our application from all devices
+      description: '`This endpoint logs a user out from our application from a single
+        device`'
       responses:
         "200":
           description: OK
@@ -314,6 +315,23 @@ paths:
       security:
       - BearerAuth: []
       summary: Logout a user
+      tags:
+      - Auth
+  /auth/logout/all:
+    get:
+      description: '`This endpoint logs a user out from our application from all devices`'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.ResponseSchema'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.UnauthorizedErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Logout a user from all devices
       tags:
       - Auth
   /auth/refresh:

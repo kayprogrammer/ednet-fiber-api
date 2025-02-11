@@ -108,11 +108,39 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "This endpoint logs a user out from our application from all devices",
+                "description": "` + "`" + `This endpoint logs a user out from our application from a single device` + "`" + `",
                 "tags": [
                     "Auth"
                 ],
                 "summary": "Logout a user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/base.ResponseSchema"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/base.UnauthorizedErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout/all": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "` + "`" + `This endpoint logs a user out from our application from all devices` + "`" + `",
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout a user from all devices",
                 "responses": {
                     "200": {
                         "description": "OK",
