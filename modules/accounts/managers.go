@@ -73,7 +73,7 @@ func (obj UserManager) GetByUsernames(db *ent.Client, ctx context.Context, usern
 	return users
 }
 
-func (obj UserManager) Create(db *ent.Client, ctx context.Context, userData RegisterSchema, isStaff bool, isVerified bool) *ent.User {
+func (obj UserManager) Create(db *ent.Client, ctx context.Context, userData RegisterSchema, role user.Role, isVerified bool) *ent.User {
 	password := config.HashPassword(userData.Password)
 	otp, otpExp := obj.GetOtp()
 
@@ -82,7 +82,7 @@ func (obj UserManager) Create(db *ent.Client, ctx context.Context, userData Regi
 		SetEmail(userData.Email).
 		SetUsername(userData.Username).
 		SetPassword(password).
-		SetIsStaff(isStaff).
+		SetRole(role).
 		SetIsVerified(isVerified).
 		SetOtp(otp).
 		SetOtpExpiry(otpExp).
@@ -101,11 +101,11 @@ func (obj UserManager) IsOtpExpired (user *ent.User) bool {
 	return time.Now().UTC().After(user.OtpExpiry.UTC())
 }
 
-func (obj UserManager) GetOrCreate(db *ent.Client, ctx context.Context, userData RegisterSchema, isVerified bool, isStaff bool) *ent.User {
+func (obj UserManager) GetOrCreate(db *ent.Client, ctx context.Context, userData RegisterSchema, isVerified bool, role user.Role) *ent.User {
 	user := obj.GetByEmail(db, ctx, userData.Email)
 	if user == nil {
 		// Create user
-		user = obj.Create(db, ctx, userData, isStaff, isVerified)
+		user = obj.Create(db, ctx, userData, role, isVerified)
 	}
 	return user
 }

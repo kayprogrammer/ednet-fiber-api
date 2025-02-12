@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
+	"github.com/kayprogrammer/ednet-fiber-api/modules/base"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/base/routes"
 )
 
@@ -25,7 +27,7 @@ import (
 func main() {
 	cfg := config.GetConfig()
 	db := config.ConnectDb(cfg)
-	// initials.CreateInitialData(db)
+	base.CreateInitialData(db, context.Background(), cfg)
 
 	app := fiber.New()
 

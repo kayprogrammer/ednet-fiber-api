@@ -14,8 +14,8 @@ type Config struct {
 	Port                      string `mapstructure:"PORT"`
 	SecretKey                 string `mapstructure:"SECRET_KEY"`
 	SecretKeyByte             []byte
-	FirstSuperuserEmail       string `mapstructure:"FIRST_SUPERUSER_EMAIL"`
-	FirstSuperUserPassword    string `mapstructure:"FIRST_SUPERUSER_PASSWORD"`
+	FirstAdminEmail           string `mapstructure:"FIRST_ADMIN_EMAIL"`
+	FirstAdminPassword        string `mapstructure:"FIRST_ADMIN_PASSWORD"`
 	FirstInstructorEmail      string `mapstructure:"FIRST_INSTRUCTOR_EMAIL"`
 	FirstInstructorPassword   string `mapstructure:"FIRST_INSTRUCTOR_PASSWORD"`
 	FirstStudentEmail         string `mapstructure:"FIRST_STUDENT_EMAIL"`

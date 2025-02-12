@@ -24,8 +24,6 @@ func (User) Fields() []ent.Field {
 			NotEmpty(),
 		field.Bool("is_verified").
 			Default(false),
-		field.Bool("is_staff").
-			Default(false),
 		field.Bool("is_active").
 			Default(true),
 		field.String("bio").

@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/base"
 )
 
@@ -35,7 +36,7 @@ func Register(db *ent.Client) fiber.Handler {
 		}
 
 		// Create User
-		newUser := userManager.Create(db, ctx, data, false, false)
+		newUser := userManager.Create(db, ctx, data, user.RoleStudent, false)
 
 		// Send Email
 		go config.SendEmail(newUser, config.ET_ACTIVATE, newUser.Otp)
