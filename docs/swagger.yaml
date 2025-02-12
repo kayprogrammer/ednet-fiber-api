@@ -208,12 +208,60 @@ definitions:
         example: https://wa.me/2348133831036
         type: string
     type: object
+  profiles.ProfileResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/profiles.ProfileSchema'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  profiles.ProfileSchema:
+    properties:
+      avatar:
+        example: https://ednet-images.com/users/john-doe
+        type: string
+      bio:
+        example: I'm the boss
+        type: string
+      dob:
+        example: "2000-09-12"
+        type: string
+      email:
+        example: johndoe@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/user.Role'
+        example: student
+      username:
+        example: johndoe
+        type: string
+    type: object
   routes.HealthCheckSchema:
     properties:
       success:
         example: pong
         type: string
     type: object
+  user.Role:
+    enum:
+    - student
+    - student
+    - instructor
+    - admin
+    type: string
+    x-enum-varnames:
+    - DefaultRole
+    - RoleStudent
+    - RoleInstructor
+    - RoleAdmin
 info:
   contact: {}
   description: |-
@@ -517,6 +565,23 @@ paths:
       summary: HealthCheck
       tags:
       - HealthCheck
+  /profiles:
+    get:
+      description: '`This endpoint allows a user to view his/her profile`'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/profiles.ProfileResponseSchema'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.UnauthorizedErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Get Your Profile
+      tags:
+      - Profiles
 produces:
 - application/json
 security:

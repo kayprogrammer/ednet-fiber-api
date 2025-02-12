@@ -436,6 +436,34 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/profiles": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "` + "`" + `This endpoint allows a user to view his/her profile` + "`" + `",
+                "tags": [
+                    "Profiles"
+                ],
+                "summary": "Get Your Profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.ProfileResponseSchema"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/base.UnauthorizedErrorExample"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -729,6 +757,59 @@ const docTemplate = `{
                 }
             }
         },
+        "profiles.ProfileResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/profiles.ProfileSchema"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "profiles.ProfileSchema": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "https://ednet-images.com/users/john-doe"
+                },
+                "bio": {
+                    "type": "string",
+                    "example": "I'm the boss"
+                },
+                "dob": {
+                    "type": "string",
+                    "example": "2000-09-12"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "johndoe@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "role": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/user.Role"
+                        }
+                    ],
+                    "example": "student"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "johndoe"
+                }
+            }
+        },
         "routes.HealthCheckSchema": {
             "type": "object",
             "properties": {
@@ -737,6 +818,21 @@ const docTemplate = `{
                     "example": "pong"
                 }
             }
+        },
+        "user.Role": {
+            "type": "string",
+            "enum": [
+                "student",
+                "student",
+                "instructor",
+                "admin"
+            ],
+            "x-enum-varnames": [
+                "DefaultRole",
+                "RoleStudent",
+                "RoleInstructor",
+                "RoleAdmin"
+            ]
         }
     },
     "securityDefinitions": {

@@ -5,6 +5,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/accounts"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/general"
+	"github.com/kayprogrammer/ednet-fiber-api/modules/profiles"
 )
 
 // All Endpoints (50)
@@ -29,6 +30,10 @@ func SetupRoutes(app *fiber.App, db *ent.Client) {
 	authRouter.Post("/refresh", accounts.Refresh(db))
 	authRouter.Get("/logout", accounts.AuthMiddleware(db), accounts.Logout(db))
 	authRouter.Get("/logout/all", accounts.AuthMiddleware(db), accounts.LogoutAll(db))
+
+	// Profiles Routes (2)
+	profilesRouter := api.Group("/profiles")
+	profilesRouter.Get("", accounts.AuthMiddleware(db), profiles.GetProfile(db))
 }
 
 type HealthCheckSchema struct {
