@@ -40,6 +40,9 @@ func (User) Fields() []ent.Field {
 			Optional().Nillable(),
 		field.Bool("social_login").
 			Default(false),
+		field.Enum("role").
+			Values("student", "instructor", "admin").
+			Default("student"),
 	)
 }
 
