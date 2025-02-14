@@ -2,6 +2,7 @@ package schemas
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
@@ -46,30 +47,35 @@ func (User) Fields() []ent.Field {
 
 // Edges of the User.
 func (User) Edges() []ent.Edge {
-    return []ent.Edge{
-        edge.To("tokens", Token.Type),
-    }
+	return []ent.Edge{
+		edge.To("tokens", Token.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("courses", Course.Type).Annotations(entsql.OnDelete(entsql.SetNull)),
+		edge.To("enrollments", Enrollment.Type).Annotations(entsql.OnDelete(entsql.SetNull)),
+		edge.To("reviews", Review.Type).Annotations(entsql.OnDelete(entsql.SetNull)),
+		edge.To("payments", Payment.Type).Annotations(entsql.OnDelete(entsql.SetNull)),
+	}
 }
 
 // Token holds authentication tokens for users.
 type Token struct {
-    ent.Schema
+	ent.Schema
 }
 
 // Fields of the Token.
 func (Token) Fields() []ent.Field {
-    return []ent.Field{
-        field.String("access").NotEmpty(),
-        field.String("refresh").NotEmpty(),
-    }
+	return append(
+		CommonFields,
+		field.String("access").NotEmpty(),
+		field.String("refresh").NotEmpty(),
+	)
 }
 
 // Edges of the Token.
 func (Token) Edges() []ent.Edge {
-    return []ent.Edge{
-        edge.From("user", User.Type).
-            Ref("tokens").
-            Unique().
-            Required(),
-    }
+	return []ent.Edge{
+		edge.From("user", User.Type).
+			Ref("tokens").
+			Unique().
+			Required(),
+	}
 }
