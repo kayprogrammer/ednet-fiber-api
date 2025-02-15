@@ -81,7 +81,7 @@ func (Course) Fields() []ent.Field {
 		field.String("intro_video_url").Optional(),
 		field.UUID("category_id", uuid.UUID{}),
 		field.String("language").Default("English"),
-		field.Enum("difficulty").Values("Beginner", "Intermediate", "Advanced"),
+		field.Enum("difficulty").Values("Beginner", "Intermediate", "Advanced").Default("Beginner"),
 		field.UUID("instructor_id", uuid.UUID{}),
 		field.Int("students_count").Default(0),
 		field.Int("total_lessons").Default(0),
