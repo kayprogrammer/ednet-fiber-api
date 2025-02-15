@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/courses"
 )
@@ -54,7 +55,7 @@ func (Tag) Fields() []ent.Field {
 // Edges of the Tag.
 func (Tag) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("courses", Course.Type),
+		edge.From("courses", Course.Type).Ref("tags"),
 	}
 }
 
@@ -75,17 +76,14 @@ func (Course) Fields() []ent.Field {
 	return append(
 		CommonFields,
 		field.String("title").NotEmpty(),
-		field.String("slug").Unique(),
-		field.Text("desc"),
-		field.String("thumbnail_url"),
+		field.String("slug").Unique().NotEmpty(),
+		field.Text("desc").NotEmpty(),
+		field.String("thumbnail_url").NotEmpty(),
 		field.String("intro_video_url").Optional(),
 		field.UUID("category_id", uuid.UUID{}),
 		field.String("language").Default("English"),
 		field.Enum("difficulty").Values("Beginner", "Intermediate", "Advanced").Default("Beginner"),
 		field.UUID("instructor_id", uuid.UUID{}),
-		field.Int("students_count").Default(0),
-		field.Int("total_lessons").Default(0),
-		field.Int("total_quizzes").Default(0),
 		field.Int("duration").Default(0), // in minutes
 		field.Bool("is_published").Default(false),
 		field.Bool("is_free").Default(false),
@@ -95,6 +93,9 @@ func (Course) Fields() []ent.Field {
 		field.Bool("certification").Default(false),
 		field.Float("rating").Default(0.0),
 		field.Int("reviews_count").Default(0),
+		field.Int("students_count").Default(0),
+		field.Int("lessons_count").Default(0),
+		field.Int("quizzes_count").Default(0),
 	)
 }
 
@@ -103,11 +104,12 @@ func (Course) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("instructor", User.Type).Ref("courses").Field("instructor_id").Unique().Required(),
 		edge.From("category", Category.Type).Ref("courses").Field("category_id").Unique().Required(),
-		edge.From("tags", Tag.Type).Ref("courses"),
+		edge.To("tags", Tag.Type),
 		edge.To("lessons", Lesson.Type),
 		edge.To("enrollments", Enrollment.Type),
 		edge.To("reviews", Review.Type),
 		edge.To("payments", Payment.Type),
+		edge.To("quizzes", Quiz.Type),
 	}
 }
 
@@ -164,6 +166,13 @@ func (Enrollment) Edges() []ent.Edge {
 	}
 }
 
+func (Enrollment) Indexes() []ent.Index {
+	return []ent.Index{
+		// Unique constraint on user_id + course_id to prevent duplicate enrollments
+		index.Fields("user_id", "course_id").Unique(),
+	}
+}
+
 // Review schema.
 type Review struct {
 	ent.Schema
@@ -188,28 +197,80 @@ func (Review) Edges() []ent.Edge {
 	}
 }
 
-// Payment schema.
-type Payment struct {
+func (Review) Indexes() []ent.Index {
+	return []ent.Index{
+		// Unique constraint on user_id + course_id to prevent duplicate reviews
+		index.Fields("user_id", "course_id").Unique(),
+	}
+}
+
+// Quiz schema.
+type Quiz struct {
 	ent.Schema
 }
 
-// Fields of Payment.
-func (Payment) Fields() []ent.Field {
+// Fields of the Quiz.
+func (Quiz) Fields() []ent.Field {
 	return append(
 		CommonFields,
-		field.UUID("user_id", uuid.UUID{}),
 		field.UUID("course_id", uuid.UUID{}),
-		field.Float("amount"),
-		field.Enum("status").Values("pending", "successful", "failed").Default("pending"),
-		field.String("payment_method"),
-		field.String("transaction_id").Unique(),
+		field.String("title").NotEmpty(),
+		field.Text("description").Optional(),
+		field.Int("total_questions").Default(0),
+		field.Int("duration").Default(0), // in minutes
+		field.Bool("is_published").Default(false),
 	)
 }
 
-// Edges of Payment.
-func (Payment) Edges() []ent.Edge {
+// Edges of the Quiz.
+func (Quiz) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", User.Type).Ref("payments").Field("user_id").Unique().Required(),
-		edge.From("course", Course.Type).Ref("payments").Field("course_id").Unique().Required(),
+		edge.From("course", Course.Type).Ref("quizzes").Field("course_id").Unique().Required(),
+		edge.To("questions", Question.Type),
+	}
+}
+
+// Question schema.
+type Question struct {
+	ent.Schema
+}
+
+// Fields of the Question.
+func (Question) Fields() []ent.Field {
+	return append(
+		CommonFields,
+		field.UUID("quiz_id", uuid.UUID{}),
+		field.Text("text").NotEmpty(), // Question text
+		field.Int("order"),            // Order in the quiz
+	)
+}
+
+// Edges of the Question.
+func (Question) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.From("quiz", Quiz.Type).Ref("questions").Field("quiz_id").Unique().Required(),
+		edge.To("options", QuestionOption.Type),
+	}
+}
+
+// Option schema.
+type QuestionOption struct {
+	ent.Schema
+}
+
+// Fields of the Option.
+func (QuestionOption) Fields() []ent.Field {
+	return append(
+		CommonFields,
+		field.UUID("question_id", uuid.UUID{}),
+		field.Text("text").NotEmpty(),           // Option text
+		field.Bool("is_correct").Default(false), // Correct answer flag
+	)
+}
+
+// Edges of the Option.
+func (QuestionOption) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.From("question", Question.Type).Ref("options").Field("question_id").Unique().Required(),
 	}
 }

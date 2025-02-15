@@ -26,7 +26,8 @@ type CourseListSchema struct {
 	Price         float64             `json:"price" example:"19.99"`
 	IsFree        bool                `json:"is_free" example:"false"`
 	Rating        float64             `json:"rating" example:"4.8"`
-	Students      int                 `json:"students_count" example:"1200"`
+	StudentsCount int                 `json:"students_count" example:"1200"`
+	LessonsCount  int                 `json:"lessons_count" example:"20"`
 	Category      CategoryOrTagSchema `json:"category"`
 	CreatedAt     time.Time           `json:"created_at"`
 	UpdatedAt     time.Time           `json:"updated_at"`
@@ -45,7 +46,8 @@ func (c CourseListSchema) Assign(course *ent.Course) CourseListSchema {
 	c.Price = course.Price
 	c.IsFree = course.IsFree
 	c.Rating = course.Rating
-	c.Students = course.StudentsCount
+	c.StudentsCount = course.StudentsCount
+	c.LessonsCount = course.LessonsCount
 	category := course.Edges.Category
 	c.Category = CategoryOrTagSchema{Name: category.Name, Slug: category.Slug}
 	c.CreatedAt = course.CreatedAt
@@ -58,8 +60,7 @@ type CourseDetailSchema struct {
 	CourseListSchema
 	IntroVideoURL  *string               `json:"intro_video_url,omitempty"`
 	IsPublished    bool                  `json:"is_published"`
-	TotalLessons   int                   `json:"total_lessons"`
-	TotalQuizzes   int                   `json:"total_quizzes"`
+	QuizzesCount   int                   `json:"quizzes_count"`
 	Duration       int                   `json:"duration"` // in minutes
 	EnrollmentType course.EnrollmentType `json:"enrollment_type"`
 	Certification  bool                  `json:"certification"`
@@ -71,8 +72,7 @@ func (c CourseDetailSchema) Assign(course *ent.Course) CourseDetailSchema {
 	c.CourseListSchema = c.CourseListSchema.Assign(course)
 	c.IntroVideoURL = &course.IntroVideoURL
 	c.IsPublished = course.IsPublished
-	c.TotalLessons = course.TotalLessons
-	c.TotalQuizzes = course.TotalQuizzes
+	c.QuizzesCount = course.QuizzesCount
 	c.Duration = course.Duration
 	c.EnrollmentType = course.EnrollmentType
 	c.Certification = course.Certification
