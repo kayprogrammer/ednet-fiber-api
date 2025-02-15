@@ -21,3 +21,14 @@ func (obj ProfileManager) GetById(db *ent.Client, ctx context.Context, id uuid.U
 		Only(ctx)
 	return u
 }
+
+func (obj ProfileManager) Update(db *ent.Client, ctx context.Context, user *ent.User, data ProfileUpdateSchema, avatar *string) *ent.User {
+	updatedUser := user.Update().
+		SetName(data.Name).
+		SetUsername(data.Username).
+		SetNillableBio(data.Bio).
+		SetNillableDob(data.Dob).
+		SetNillableAvatar(avatar).
+		SaveX(ctx)
+	return updatedUser
+}

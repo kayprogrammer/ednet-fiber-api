@@ -15,33 +15,19 @@ type User struct {
 func (User) Fields() []ent.Field {
 	return append(
 		CommonFields,
-		field.String("name").
-			NotEmpty(),
-		field.String("username").
-			NotEmpty().Unique(),
-		field.String("email").
-			NotEmpty(),
-		field.String("password").
-			NotEmpty(),
-		field.Bool("is_verified").
-			Default(false),
-		field.Bool("is_active").
-			Default(true),
-		field.String("bio").
-			Optional().Nillable(),
-		field.Time("dob").
-			Optional().Nillable(),
-		field.String("avatar").
-			Optional().Nillable(),
-		field.Uint32("otp").
-			Optional().Nillable(),
-		field.Time("otp_expiry").
-			Optional().Nillable(),
-		field.Bool("social_login").
-			Default(false),
-		field.Enum("role").
-			Values("student", "instructor", "admin").
-			Default("student"),
+		field.String("name").NotEmpty().MaxLen(200).MinLen(2),
+		field.String("username").NotEmpty().Unique().MaxLen(100).MinLen(2),
+		field.String("email").NotEmpty(),
+		field.String("password").MinLen(8).NotEmpty(),
+		field.Bool("is_verified").Default(false),
+		field.Bool("is_active").Default(true),
+		field.String("bio").Optional().Nillable().MaxLen(300).MinLen(10),
+		field.Time("dob").Optional().Nillable(),
+		field.String("avatar").Optional().Nillable(),
+		field.Uint32("otp").Optional().Nillable(),
+		field.Time("otp_expiry").Optional().Nillable(),
+		field.Bool("social_login").Default(false),
+		field.Enum("role").Values("student", "instructor", "admin").Default("student"),
 	)
 }
 
@@ -73,9 +59,6 @@ func (Token) Fields() []ent.Field {
 // Edges of the Token.
 func (Token) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", User.Type).
-			Ref("tokens").
-			Unique().
-			Required(),
+		edge.From("user", User.Type).Ref("tokens").Unique().Required(),
 	}
 }

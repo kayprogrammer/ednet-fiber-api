@@ -463,6 +463,78 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "` + "`" + `This endpoint allows a user to update his/her profile` + "`" + `",
+                "tags": [
+                    "Profiles"
+                ],
+                "summary": "Update Your Profile",
+                "parameters": [
+                    {
+                        "maxLength": 300,
+                        "minLength": 10,
+                        "type": "string",
+                        "example": "I'm the boss",
+                        "name": "bio",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2000-09-12",
+                        "name": "dob",
+                        "in": "formData"
+                    },
+                    {
+                        "maxLength": 150,
+                        "minLength": 10,
+                        "type": "string",
+                        "example": "John Doe",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "maxLength": 50,
+                        "minLength": 2,
+                        "type": "string",
+                        "example": "john-doe",
+                        "name": "username",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Profile picture to upload",
+                        "name": "avatar",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.ProfileResponseSchema"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/base.UnauthorizedErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
+                        }
+                    }
+                }
             }
         }
     },

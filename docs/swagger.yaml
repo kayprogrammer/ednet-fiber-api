@@ -582,6 +582,55 @@ paths:
       summary: Get Your Profile
       tags:
       - Profiles
+    put:
+      description: '`This endpoint allows a user to update his/her profile`'
+      parameters:
+      - example: I'm the boss
+        in: formData
+        maxLength: 300
+        minLength: 10
+        name: bio
+        type: string
+      - example: "2000-09-12"
+        in: formData
+        name: dob
+        type: string
+      - example: John Doe
+        in: formData
+        maxLength: 150
+        minLength: 10
+        name: name
+        required: true
+        type: string
+      - example: john-doe
+        in: formData
+        maxLength: 50
+        minLength: 2
+        name: username
+        required: true
+        type: string
+      - description: Profile picture to upload
+        in: formData
+        name: avatar
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/profiles.ProfileResponseSchema'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.UnauthorizedErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Update Your Profile
+      tags:
+      - Profiles
 produces:
 - application/json
 security:

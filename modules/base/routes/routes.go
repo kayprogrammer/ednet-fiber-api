@@ -34,6 +34,7 @@ func SetupRoutes(app *fiber.App, db *ent.Client) {
 	// Profiles Routes (2)
 	profilesRouter := api.Group("/profiles")
 	profilesRouter.Get("", accounts.AuthMiddleware(db), profiles.GetProfile(db))
+	profilesRouter.Put("", accounts.AuthMiddleware(db), profiles.UpdateProfile(db))
 }
 
 type HealthCheckSchema struct {
