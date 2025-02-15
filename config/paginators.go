@@ -1,57 +1,68 @@
 package config
 
 import (
+	"context"
+	"log"
 	"math"
-	"reflect"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-type PaginatedResponseDataSchema struct {
-	Limit       uint `json:"limit" example:"100"`
-	CurrentPage uint `json:"current_page" example:"1"`
-	LastPage    uint `json:"last_page" example:"50"`
+type PaginationResponse[T any] struct {
+	Items      []T `json:"items"`
+	Page       int `json:"page"`
+	ItemsCount int `json:"items_count"`
+	TotalPages int `json:"total_pages"`
+	Limit      int `json:"limit"`
 }
 
-func PaginateQueryset(queryset interface{}, fiberCtx *fiber.Ctx) (*PaginatedResponseDataSchema, any, *ErrorResponse) {
-	currentPage := fiberCtx.QueryInt("page", 1)
-	limit := fiberCtx.QueryInt("limit", 100)
+// PaginateModel - Generic Pagination for any Ent Query
+func PaginateModel[T any, Q interface {
+	Count(context.Context) (int, error)
+	Limit(int) Q
+	Offset(int) Q
+	All(context.Context) ([]T, error)
+}](c *fiber.Ctx, query Q) *PaginationResponse[T] {
+	ctx := c.Context()
 
-	if currentPage < 1 {
-		errData := RequestErr(ERR_INVALID_PAGE, "Invalid Page")
-		return nil, nil, &errData
+	// Parse query parameters
+	page := c.QueryInt("page", 1)      // Default to page 1
+	limit := c.QueryInt("limit", 100)  // Default to 100 items per page
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 100
 	}
 
-	// Check if page size is provided as an argument
-	querysetValue := reflect.ValueOf(queryset)
-	itemsCount := querysetValue.Len()
-	lastPage := math.Ceil(float64(itemsCount) / float64(limit))
-	if lastPage == 0 {
-		lastPage = 1
-	}
-	if currentPage > int(lastPage) {
-		errData := RequestErr(ERR_INVALID_PAGE, "Page number is out of range")
-		return nil, nil, &errData
+	// Get total count of items
+	itemsCount, err := query.Count(ctx)
+	if err != nil {
+		log.Println("Error getting total count:", err)
+		return nil
 	}
 
-	startIndex := (currentPage - 1) * limit
-	endIndex := startIndex + limit
+	// Calculate pagination values
+	skip := (page - 1) * limit
+	totalPages := int(math.Ceil(float64(itemsCount) / float64(limit)))
 
-	// Ensure startIndex is within bounds
-	if startIndex < 0 {
-		startIndex = 0
+	// Fetch paginated items
+	items, err := query.
+		Limit(limit).
+		Offset(skip).
+		All(ctx)
+
+	if err != nil {
+		log.Println("Error fetching paginated items:", err)
+		return nil
 	}
 
-	// Ensure endIndex is within bounds
-	if endIndex > itemsCount {
-		endIndex = itemsCount
+	// Return paginated response
+	return &PaginationResponse[T]{
+		Items:        items,
+		Page:         page,
+		ItemsCount:   itemsCount,
+		TotalPages:   totalPages,
+		Limit: limit,
 	}
-
-	paginatorData := PaginatedResponseDataSchema{
-		Limit:     uint(limit),
-		CurrentPage: uint(currentPage),
-		LastPage:    uint(lastPage),
-	}
-	paginatedItems := querysetValue.Slice(startIndex, endIndex).Interface()
-	return &paginatorData, paginatedItems, nil
 }
