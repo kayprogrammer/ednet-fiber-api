@@ -18,12 +18,6 @@ func ResponseMessage(message string) ResponseSchema {
 	return ResponseSchema{Status: "success", Message: message}
 }
 
-type PaginatedResponseDataSchema struct {
-	PerPage     uint `json:"per_page" example:"100"`
-	CurrentPage uint `json:"current_page" example:"1"`
-	LastPage    uint `json:"last_page" example:"100"`
-}
-
 type UserDataSchema struct {
 	Name     string  `json:"name" example:"John Doe"`
 	Username string  `json:"username" example:"john-doe"`
