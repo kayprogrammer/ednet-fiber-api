@@ -6,7 +6,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
-	"github.com/kayprogrammer/ednet-fiber-api/modules/courses"
 )
 
 // Category schema.
@@ -34,7 +33,7 @@ func (Category) Edges() []ent.Edge {
 // Hooks for Category.
 func (Category) Hooks() []ent.Hook {
 	return []ent.Hook{
-		courses.GenerateCategoryOrTagSlug(),
+		GenerateCategoryOrTagSlug(),
 	}
 }
 
@@ -62,7 +61,7 @@ func (Tag) Edges() []ent.Edge {
 // Hooks for Tag.
 func (Tag) Hooks() []ent.Hook {
 	return []ent.Hook{
-		courses.GenerateCategoryOrTagSlug(),
+		GenerateCategoryOrTagSlug(),
 	}
 }
 

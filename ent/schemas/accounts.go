@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 type User struct {
@@ -51,6 +52,7 @@ type Token struct {
 func (Token) Fields() []ent.Field {
 	return append(
 		CommonFields,
+		field.UUID("user_id", uuid.UUID{}),
 		field.String("access").NotEmpty(),
 		field.String("refresh").NotEmpty(),
 	)
@@ -59,6 +61,6 @@ func (Token) Fields() []ent.Field {
 // Edges of the Token.
 func (Token) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", User.Type).Ref("tokens").Unique().Required(),
+		edge.From("user", User.Type).Ref("tokens").Field("user_id").Unique().Required(),
 	}
 }
