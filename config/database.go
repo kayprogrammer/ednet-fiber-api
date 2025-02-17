@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func ConnectDb(cfg Config) *ent.Client {
+func ConnectDb(cfg Config, ctx context.Context) *ent.Client {
 	dbUrlTemplate := "host=%s port=%s user=%s dbname=%s password=%s sslmode=disable"
 
 	dbUrl := fmt.Sprintf(
@@ -28,7 +28,7 @@ func ConnectDb(cfg Config) *ent.Client {
 	}
 	// Run the auto migration tool.
 	if err := client.Schema.Create(
-		context.Background(),
+		ctx,
 		migrate.WithDropIndex(true),
 		migrate.WithDropColumn(true),
 	); err != nil {

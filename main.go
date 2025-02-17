@@ -26,8 +26,9 @@ import (
 // @description Type 'Bearer jwt_string' to correctly set the API Key
 func main() {
 	cfg := config.GetConfig()
-	db := config.ConnectDb(cfg)
-	base.CreateInitialData(db, context.Background(), cfg)
+	ctx := context.Background()
+	db := config.ConnectDb(cfg, ctx)
+	base.CreateInitialData(db, ctx, cfg)
 
 	app := fiber.New()
 
