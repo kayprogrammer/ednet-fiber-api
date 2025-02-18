@@ -2,7 +2,6 @@ package accounts
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -112,7 +111,6 @@ func (obj UserManager) GetOrCreate(db *ent.Client, ctx context.Context, userData
 }
 
 func (obj UserManager) AddTokens(db *ent.Client, ctx context.Context, user *ent.User, access string, refresh string) {
-	log.Println(db == nil, user.ID, access, refresh)
 	db.Token.
         Create().
 		SetUserID(user.ID).
