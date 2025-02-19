@@ -53,6 +53,7 @@ func registerTranslations(param string) {
 	}
 
 	registerTranslation("gt", "Value is too small!", translator)
+	registerTranslation("datetime", "Invalid datetime!", translator)
 	registerTranslation("required", "This field is required.", translator)
 	registerTranslation("required_if", "This field is required.", translator)
 	registerTranslation("required_without", "This field is required.", translator)

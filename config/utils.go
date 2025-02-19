@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/gosimple/slug"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -86,4 +87,16 @@ func KeysExistInMap(keys []string, myMap map[string]interface{}) bool {
         }
     }
     return true
+}
+
+func Slugify(value string) string {
+	return slug.Make(value)
+}
+
+func ParseDate(value *string) *time.Time {
+	if value == nil {
+		return nil
+	}
+	parsedTime, _ := time.Parse("2006-01-02", *value)
+	return &parsedTime 
 }

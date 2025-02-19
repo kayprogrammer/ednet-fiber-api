@@ -40,11 +40,17 @@ func GetProfile(db *ent.Client) fiber.Handler {
 func UpdateProfile(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		user := base.RequestUser(c)
+		ctx := c.Context()
 		data := ProfileUpdateSchema{}
 		if errCode, errData := config.ValidateFormRequest(c, &data); errData != nil {
 			return config.APIError(c, *errCode, *errData)
 		}
 
+		existingUser := userManager.GetByUsername(db, ctx, data.Username)
+		if existingUser != nil && existingUser.ID != user.ID {
+			return config.APIError(c, 422, config.ValidationErr("username", "Username already used"))
+		}
+		
 		// Check and validate image
 		file, err := config.ValidateImage(c, "avatar", false)
 		if err != nil {
@@ -57,7 +63,7 @@ func UpdateProfile(db *ent.Client) fiber.Handler {
 			avatarStr := config.UploadFile(file, string(config.FF_AVATARS))
 			avatar = &avatarStr
 		}
-		updatedUser := profileManager.Update(db, c.Context(), user, data, avatar)
+		updatedUser := profileManager.Update(db, ctx, user, data, avatar)
 		response := ProfileResponseSchema{
 			ResponseSchema: base.ResponseMessage("Profile fetched"),
 			Data:           ProfileSchema{}.Assign(updatedUser),

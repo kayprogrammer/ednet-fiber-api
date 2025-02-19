@@ -35,8 +35,8 @@ type ProfileResponseSchema struct {
 }
 
 type ProfileUpdateSchema struct {
-	Name     string     `json:"name" validate:"required,max=150,min=10" example:"John Doe"`
-	Username string     `json:"username" validate:"required,max=50,min=2" example:"john-doe"`
-	Bio      *string    `json:"bio" validate:"max=300,min=10" example:"I'm the boss"`
-	Dob      *time.Time `json:"dob" example:"2000-09-12"`
+	Name     string  `form:"name" validate:"required,max=150,min=10" example:"John Doe"`
+	Username string  `form:"username" validate:"required,max=50,min=2" example:"john-doe"`
+	Bio      *string `form:"bio" validate:"omitempty,max=300,min=10" example:"I'm the boss"`
+	Dob      *string `form:"dob" validate:"omitempty,datetime=2006-01-02" example:"2000-09-12"`
 }

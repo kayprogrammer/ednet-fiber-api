@@ -2,8 +2,8 @@ package profiles
 
 import (
 	"context"
-
 	"github.com/google/uuid"
+	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 )
@@ -27,7 +27,7 @@ func (obj ProfileManager) Update(db *ent.Client, ctx context.Context, user *ent.
 		SetName(data.Name).
 		SetUsername(data.Username).
 		SetNillableBio(data.Bio).
-		SetNillableDob(data.Dob).
+		SetNillableDob(config.ParseDate(data.Dob)).
 		SetNillableAvatar(avatar).
 		SaveX(ctx)
 	return updatedUser

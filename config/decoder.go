@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
@@ -98,6 +99,7 @@ func ValidateFormRequest(c *fiber.Ctx, data interface{}) (*int, *ErrorResponse) 
 	}
 
 	if err := c.BodyParser(data); err != nil {
+		log.Println(err)
 		errD := RequestErr(ERR_INVALID_REQUEST, "Unable to parse form body")
 		return &errC, &errD
 	}
