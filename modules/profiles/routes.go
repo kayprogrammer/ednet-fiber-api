@@ -41,12 +41,12 @@ func UpdateProfile(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		user := base.RequestUser(c)
 		data := ProfileUpdateSchema{}
-		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
+		if errCode, errData := config.ValidateFormRequest(c, &data); errData != nil {
 			return config.APIError(c, *errCode, *errData)
 		}
 
 		// Check and validate image
-		file, err := config.ValidateImage(c, "cover_image", false)
+		file, err := config.ValidateImage(c, "avatar", false)
 		if err != nil {
 			return c.Status(422).JSON(err)
 		}

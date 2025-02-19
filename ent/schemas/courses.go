@@ -6,8 +6,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
-	"github.com/kayprogrammer/ednet-fiber-api/ent/hook"
-	"github.com/kayprogrammer/ednet-fiber-api/ent/hooks"
 )
 
 // Category schema.
@@ -32,13 +30,6 @@ func (Category) Edges() []ent.Edge {
 	}
 }
 
-// Hooks for Category.
-func (Category) Hooks() []ent.Hook {
-	return []ent.Hook{
-		hook.On(hooks.GenerateCategoryOrTagSlug, ent.OpCreate|ent.OpUpdate|ent.OpUpdateOne),
-	}
-}
-
 // Tag schema.
 type Tag struct {
 	ent.Schema
@@ -57,13 +48,6 @@ func (Tag) Fields() []ent.Field {
 func (Tag) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("courses", Course.Type).Ref("tags"),
-	}
-}
-
-// Hooks for Tag.
-func (Tag) Hooks() []ent.Hook {
-	return []ent.Hook{
-		hook.On(hooks.GenerateCategoryOrTagSlug, ent.OpCreate|ent.OpUpdate|ent.OpUpdateOne),
 	}
 }
 
