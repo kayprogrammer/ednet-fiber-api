@@ -61,7 +61,7 @@ type CourseDetailSchema struct {
 	IntroVideoURL  *string               `json:"intro_video_url,omitempty"`
 	IsPublished    bool                  `json:"is_published"`
 	QuizzesCount   int                   `json:"quizzes_count"`
-	Duration       int                   `json:"duration"` // in minutes
+	Duration       uint                   `json:"duration"` // in minutes
 	EnrollmentType course.EnrollmentType `json:"enrollment_type"`
 	Certification  bool                  `json:"certification"`
 	ReviewsCount   int                   `json:"reviews_count"`

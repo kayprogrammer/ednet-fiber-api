@@ -69,7 +69,7 @@ func (Course) Fields() []ent.Field {
 		field.String("language").Default("English"),
 		field.Enum("difficulty").Values("Beginner", "Intermediate", "Advanced").Default("Beginner"),
 		field.UUID("instructor_id", uuid.UUID{}),
-		field.Int("duration").Default(0), // in minutes
+		field.Uint("duration").Default(0), // in minutes
 		field.Bool("is_published").Default(false),
 		field.Bool("is_free").Default(false),
 		field.Float("price").Default(0.0),

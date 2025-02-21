@@ -1,8 +1,7 @@
-package base
+package seeding
 
 import (
 	"context"
-	"log"
 
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
@@ -40,12 +39,4 @@ func createInstructor(db *ent.Client, ctx context.Context, cfg config.Config) *e
 			SaveX(ctx)
 	}
 	return user_
-}
-
-func CreateInitialData(db *ent.Client, ctx context.Context, cfg config.Config) {
-	log.Println("Creating Initial Data....")
-	createAdmin(db, ctx, cfg)
-	createStudent(db, ctx, cfg)
-	createInstructor(db, ctx, cfg)
-	log.Println("Initial Data Created....")
 }

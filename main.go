@@ -9,8 +9,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
-	"github.com/kayprogrammer/ednet-fiber-api/modules/base"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/base/routes"
+	"github.com/kayprogrammer/ednet-fiber-api/modules/seeding"
 )
 
 // @title EDNET API
@@ -28,7 +28,7 @@ func main() {
 	cfg := config.GetConfig()
 	ctx := context.Background()
 	db := config.ConnectDb(cfg, ctx)
-	base.CreateInitialData(db, ctx, cfg)
+	seeding.CreateInitialData(db, ctx, cfg)
 
 	app := fiber.New()
 
