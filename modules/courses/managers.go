@@ -55,6 +55,18 @@ func (c CourseManager) FilterCoursesByName(db *ent.Client, fibCtx *fiber.Ctx, na
 	return courses
 }
 
+func (c CourseManager) FilterCoursesByInstructor(db *ent.Client, fibCtx *fiber.Ctx, instructor *ent.User) *config.PaginationResponse[*ent.Course] {
+	courses := config.PaginateModel(
+		fibCtx,
+		db.Course.Query().
+			Where(course.InstructorIDEQ(instructor.ID)).
+			WithInstructor().
+			WithCategory().
+			WithTags(),
+	)
+	return courses
+}
+
 func (c CourseManager) GetCourseBySlug(db *ent.Client, ctx context.Context, slug string) *ent.Course {
 	course, _ := db.Course.Query().Where(course.SlugEQ(slug)).Only(ctx)
 	return course

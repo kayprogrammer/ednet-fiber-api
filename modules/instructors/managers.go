@@ -29,7 +29,7 @@ func (i InstructorManager) GenerateCourseSlug(db *ent.Client, ctx context.Contex
 		if !exists {
 			break
 		}
-		uniqueSlug = baseSlug + " " + config.GetRandomString(7)
+		uniqueSlug = baseSlug + "-" + config.GetRandomString(7)
 	}
 	return uniqueSlug
 }
