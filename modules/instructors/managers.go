@@ -21,6 +21,20 @@ func (i InstructorManager) CreateCourse(db *ent.Client, ctx context.Context, ins
 	return course
 }
 
+func (i InstructorManager) UpdateCourse(db *ent.Client, ctx context.Context, course *ent.Course, category *ent.Category, thumbnailUrl string, introVideoUrl *string, data CourseCreateSchema) *ent.Course {
+	slug := course.Slug
+	if data.Title != course.Title {
+		slug = i.GenerateCourseSlug(db, ctx, data.Title)
+	}
+	updatedCourse := course.Update().SetTitle(data.Title).SetSlug(slug).SetDesc(data.Desc).
+		SetCategoryID(category.ID).SetLanguage(data.Language).
+		SetDifficulty(data.Difficulty).SetDuration(data.Duration).SetIsFree(data.IsFree).
+		SetThumbnailURL(thumbnailUrl).SetNillableIntroVideoURL(introVideoUrl).
+		SetPrice(data.Price).SetDiscountPrice(data.DiscountPrice).SetEnrollmentType(data.EnrollmentType).
+		SetCertification(data.Certification).SaveX(ctx)
+	return updatedCourse
+}
+
 func (i InstructorManager) GenerateCourseSlug(db *ent.Client, ctx context.Context, title string) string {
 	baseSlug := config.Slugify(title)
 	uniqueSlug := baseSlug
