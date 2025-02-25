@@ -55,6 +55,18 @@ func (c CourseManager) FilterCoursesByName(db *ent.Client, fibCtx *fiber.Ctx, na
 	return courses
 }
 
+func (c CourseManager) FilterFreeOrPaidCourses(db *ent.Client, fibCtx *fiber.Ctx, isFree bool) *config.PaginationResponse[*ent.Course] {
+	courses := config.PaginateModel(
+		fibCtx,
+		db.Course.Query().
+			Where(course.IsFreeEQ(isFree)).
+			WithInstructor().
+			WithCategory().
+			WithTags(),
+	)
+	return courses
+}
+
 func (c CourseManager) FilterCoursesByInstructor(db *ent.Client, fibCtx *fiber.Ctx, instructor *ent.User) *config.PaginationResponse[*ent.Course] {
 	courses := config.PaginateModel(
 		fibCtx,
