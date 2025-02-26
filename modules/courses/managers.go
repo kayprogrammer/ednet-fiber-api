@@ -38,6 +38,18 @@ func (c CourseManager) GetAll(db *ent.Client, fibCtx *fiber.Ctx) *config.Paginat
 	return courses
 }
 
+func (c CourseManager) GetAllByRating(db *ent.Client, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Course] {
+	courses := config.PaginateModel(
+		fibCtx,
+		db.Course.Query().
+			WithInstructor().
+			WithCategory().
+			WithTags().
+			Order(course.ByRating()),
+	)
+	return courses
+}
+
 func (c CourseManager) GetCourseByName(db *ent.Client, ctx context.Context, name string) *ent.Course {
 	course, _ := db.Course.Query().Where(course.TitleEQ(name)).First(ctx)
 	return course
