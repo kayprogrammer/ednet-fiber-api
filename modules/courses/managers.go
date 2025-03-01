@@ -2,12 +2,14 @@ package courses
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/category"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 )
 
 type CourseManager struct{}
@@ -27,26 +29,43 @@ func (c CourseManager) GetCategoryBySlug(db *ent.Client, ctx context.Context, sl
 	return category
 }
 
-func (c CourseManager) GetAll(db *ent.Client, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Course] {
-	courses := config.PaginateModel(
-		fibCtx,
-		db.Course.Query().
-			WithInstructor().
-			WithCategory().
-			WithTags(),
-	)
-	return courses
+func (c CourseManager) ApplyCourseFilters(fibCtx *fiber.Ctx, query *ent.CourseQuery) *ent.CourseQuery {
+	filters := map[string]func(string){
+		"title": func(value string) { query.Where(course.TitleContains(value)) },
+		"instructor": func(value string) { query.Where(course.HasInstructorWith(user.NameContains(value))) },
+		"instructorUsername": func(value string) { query.Where(course.HasInstructorWith(user.UsernameContains(value))) },
+		"exactInstructorUsername": func(value string) { query.Where(course.HasInstructorWith(user.UsernameEQ(value))) },
+		"isFree": func(value string) {
+			if freeStatus, err := strconv.ParseBool(value); err == nil {
+				query.Where(course.IsFreeEQ(freeStatus))
+			}
+		},
+	}
+	// Apply filters dynamically
+	for param, apply := range filters {
+		if value := fibCtx.Query(param); value != "" {
+			apply(value)
+		}
+	}
+
+	// Sorting by rating
+	switch fibCtx.Query("sortByRating") {
+	case "desc":
+		query.Order(ent.Desc(course.FieldRating))
+	case "asc":
+		query.Order(ent.Asc(course.FieldRating))
+	}
+	return query
 }
 
-func (c CourseManager) GetAllByRating(db *ent.Client, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Course] {
-	courses := config.PaginateModel(
-		fibCtx,
-		db.Course.Query().
-			WithInstructor().
-			WithCategory().
-			WithTags().
-			Order(course.ByRating()),
-	)
+func (c CourseManager) GetAll(db *ent.Client, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Course] {
+	query := db.Course.Query().
+		WithInstructor().
+		WithCategory().
+		WithTags()
+
+	query = c.ApplyCourseFilters(fibCtx, query)
+	courses := config.PaginateModel(fibCtx, query)
 	return courses
 }
 
@@ -55,39 +74,14 @@ func (c CourseManager) GetCourseByName(db *ent.Client, ctx context.Context, name
 	return course
 }
 
-func (c CourseManager) FilterCoursesByName(db *ent.Client, fibCtx *fiber.Ctx, name string) *config.PaginationResponse[*ent.Course] {
-	courses := config.PaginateModel(
-		fibCtx,
-		db.Course.Query().
-			Where(course.TitleContains(name)).
-			WithInstructor().
-			WithCategory().
-			WithTags(),
-	)
-	return courses
-}
-
-func (c CourseManager) FilterFreeOrPaidCourses(db *ent.Client, fibCtx *fiber.Ctx, isFree bool) *config.PaginationResponse[*ent.Course] {
-	courses := config.PaginateModel(
-		fibCtx,
-		db.Course.Query().
-			Where(course.IsFreeEQ(isFree)).
-			WithInstructor().
-			WithCategory().
-			WithTags(),
-	)
-	return courses
-}
-
 func (c CourseManager) FilterCoursesByInstructor(db *ent.Client, fibCtx *fiber.Ctx, instructor *ent.User) *config.PaginationResponse[*ent.Course] {
-	courses := config.PaginateModel(
-		fibCtx,
-		db.Course.Query().
-			Where(course.InstructorIDEQ(instructor.ID)).
-			WithInstructor().
-			WithCategory().
-			WithTags(),
-	)
+	query := db.Course.Query().
+		Where(course.InstructorIDEQ(instructor.ID)).
+		WithInstructor().
+		WithCategory().
+		WithTags()
+	query = c.ApplyCourseFilters(fibCtx, query)
+	courses := config.PaginateModel(fibCtx, query)
 	return courses
 }
 

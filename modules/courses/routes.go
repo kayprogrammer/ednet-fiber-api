@@ -7,6 +7,6 @@ import (
 
 func GetLatestCourses(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-
+		
 	}
 }
