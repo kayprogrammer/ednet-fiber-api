@@ -159,6 +159,18 @@ definitions:
         example: failure
         type: string
     type: object
+  base.UserDataSchema:
+    properties:
+      avatar:
+        example: https://img.url
+        type: string
+      name:
+        example: John Doe
+        type: string
+      username:
+        example: john-doe
+        type: string
+    type: object
   base.ValidationErrorExample:
     properties:
       data:
@@ -168,6 +180,97 @@ definitions:
         type: string
       status:
         example: failure
+        type: string
+    type: object
+  config.PaginationResponse-courses_CourseListSchema:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/courses.CourseListSchema'
+        type: array
+      items_count:
+        type: integer
+      limit:
+        type: integer
+      page:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  course.Difficulty:
+    enum:
+    - Beginner
+    - Beginner
+    - Intermediate
+    - Advanced
+    type: string
+    x-enum-varnames:
+    - DefaultDifficulty
+    - DifficultyBeginner
+    - DifficultyIntermediate
+    - DifficultyAdvanced
+  courses.CategoryOrTagSchema:
+    properties:
+      name:
+        type: string
+      slug:
+        type: string
+    type: object
+  courses.CourseListSchema:
+    properties:
+      category:
+        $ref: '#/definitions/courses.CategoryOrTagSchema'
+      created_at:
+        type: string
+      desc:
+        type: string
+      difficulty:
+        allOf:
+        - $ref: '#/definitions/course.Difficulty'
+        example: Beginner
+      discount_price:
+        type: number
+      instructor:
+        $ref: '#/definitions/base.UserDataSchema'
+      is_free:
+        example: false
+        type: boolean
+      language:
+        example: English
+        type: string
+      lessons_count:
+        example: 20
+        type: integer
+      price:
+        example: 19.99
+        type: number
+      rating:
+        example: 4.8
+        type: number
+      slug:
+        example: go-programming-for-beginners
+        type: string
+      students_count:
+        example: 1200
+        type: integer
+      thumbnail_url:
+        example: https://ednet-images.com/courses/go.jpg
+        type: string
+      title:
+        example: Go Programming for Beginners
+        type: string
+      updated_at:
+        type: string
+    type: object
+  courses.CoursesResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/config.PaginationResponse-courses_CourseListSchema'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
         type: string
     type: object
   general.SiteDetailResponseSchema:
@@ -543,6 +646,42 @@ paths:
       summary: Verify a user's email
       tags:
       - Auth
+  /courses:
+    get:
+      description: This endpoint retrieves paginated responses of latest courses
+      parameters:
+      - default: 1
+        description: Current Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Page Limit
+        in: query
+        name: limit
+        type: integer
+      - default: '""'
+        description: Filter By Title
+        in: query
+        name: title
+        type: string
+      - default: '""'
+        description: Filter By Instructor's Name Or Username
+        in: query
+        name: intructor
+        type: string
+      - description: Filter By Free Status
+        in: query
+        name: isFree
+        type: boolean
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.CoursesResponseSchema'
+      summary: Retrieve Latest Courses
+      tags:
+      - Courses
   /general/site-detail:
     get:
       description: This endpoint retrieves few details of the site/application.

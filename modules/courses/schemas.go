@@ -3,6 +3,7 @@ package courses
 import (
 	"time"
 
+	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/base"
@@ -54,6 +55,21 @@ func (c CourseListSchema) Assign(course *ent.Course) CourseListSchema {
 	c.UpdatedAt = course.CreatedAt
 	return c
 }
+
+type CoursesResponseSchema struct {
+	base.ResponseSchema
+	Data  config.PaginationResponse[CourseListSchema] `json:"data"` 
+}
+
+func (c CoursesResponseSchema) Assign(coursesData *config.PaginationResponse[*ent.Course]) CoursesResponseSchema {
+	items := c.Data.Items
+	for i, course := range coursesData.Items {
+		items[i] = items[i].Assign(course)
+	}
+	c.Data.Items = items
+	return c
+}
+
 
 // CourseDetailSchema - Full details of a course
 type CourseDetailSchema struct {

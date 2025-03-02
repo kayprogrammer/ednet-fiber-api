@@ -42,7 +42,7 @@ func Register(db *ent.Client) fiber.Handler {
 		go config.SendEmail(newUser, config.ET_ACTIVATE, newUser.Otp)
 
 		response := RegisterResponseSchema{
-			ResponseSchema: base.ResponseSchema{Message: "Registration successful"},
+			ResponseSchema: base.ResponseMessage("Registration successful"),
 			Data:           EmailRequestSchema{Email: newUser.Email},
 		}
 		return c.Status(201).JSON(response)

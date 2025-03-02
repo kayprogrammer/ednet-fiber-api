@@ -403,6 +403,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/courses": {
+            "get": {
+                "description": "This endpoint retrieves paginated responses of latest courses",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Retrieve Latest Courses",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Current Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Page Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"\"",
+                        "description": "Filter By Title",
+                        "name": "title",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"\"",
+                        "description": "Filter By Instructor's Name Or Username",
+                        "name": "intructor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter By Free Status",
+                        "name": "isFree",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.CoursesResponseSchema"
+                        }
+                    }
+                }
+            }
+        },
         "/general/site-detail": {
             "get": {
                 "description": "This endpoint retrieves few details of the site/application.",
@@ -760,6 +813,23 @@ const docTemplate = `{
                 }
             }
         },
+        "base.UserDataSchema": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "https://img.url"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "john-doe"
+                }
+            }
+        },
         "base.ValidationErrorExample": {
             "type": "object",
             "properties": {
@@ -773,6 +843,138 @@ const docTemplate = `{
                 "status": {
                     "type": "string",
                     "example": "failure"
+                }
+            }
+        },
+        "config.PaginationResponse-courses_CourseListSchema": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/courses.CourseListSchema"
+                    }
+                },
+                "items_count": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "course.Difficulty": {
+            "type": "string",
+            "enum": [
+                "Beginner",
+                "Beginner",
+                "Intermediate",
+                "Advanced"
+            ],
+            "x-enum-varnames": [
+                "DefaultDifficulty",
+                "DifficultyBeginner",
+                "DifficultyIntermediate",
+                "DifficultyAdvanced"
+            ]
+        },
+        "courses.CategoryOrTagSchema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "courses.CourseListSchema": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/courses.CategoryOrTagSchema"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "difficulty": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/course.Difficulty"
+                        }
+                    ],
+                    "example": "Beginner"
+                },
+                "discount_price": {
+                    "type": "number"
+                },
+                "instructor": {
+                    "$ref": "#/definitions/base.UserDataSchema"
+                },
+                "is_free": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "language": {
+                    "type": "string",
+                    "example": "English"
+                },
+                "lessons_count": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "price": {
+                    "type": "number",
+                    "example": 19.99
+                },
+                "rating": {
+                    "type": "number",
+                    "example": 4.8
+                },
+                "slug": {
+                    "type": "string",
+                    "example": "go-programming-for-beginners"
+                },
+                "students_count": {
+                    "type": "integer",
+                    "example": 1200
+                },
+                "thumbnail_url": {
+                    "type": "string",
+                    "example": "https://ednet-images.com/courses/go.jpg"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Go Programming for Beginners"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "courses.CoursesResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/config.PaginationResponse-courses_CourseListSchema"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },
