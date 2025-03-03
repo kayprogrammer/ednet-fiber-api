@@ -14,6 +14,16 @@ type CategoryOrTagSchema struct {
 	Slug string `json:"slug"`
 }
 
+func (c CategoryOrTagSchema) Assign(category *ent.Category, tag *ent.Tag) CategoryOrTagSchema {
+	if category != nil {
+		c.Name = category.Name
+		c.Slug = category.Slug
+	} else {
+		c.Name = tag.Name
+		c.Slug = tag.Slug
+	}
+	return c
+}
 // CourseListSchema - Summary of a course for listings
 type CourseListSchema struct {
 	Instructor    base.UserDataSchema `json:"instructor"`
@@ -49,8 +59,7 @@ func (c CourseListSchema) Assign(course *ent.Course) CourseListSchema {
 	c.Rating = course.Rating
 	c.StudentsCount = course.StudentsCount
 	c.LessonsCount = course.LessonsCount
-	category := course.Edges.Category
-	c.Category = CategoryOrTagSchema{Name: category.Name, Slug: category.Slug}
+	c.Category = c.Category.Assign(course.Edges.Category, nil)
 	c.CreatedAt = course.CreatedAt
 	c.UpdatedAt = course.CreatedAt
 	return c
@@ -63,8 +72,8 @@ type CoursesResponseSchema struct {
 
 func (c CoursesResponseSchema) Assign(coursesData *config.PaginationResponse[*ent.Course]) CoursesResponseSchema {
 	items := c.Data.Items
-	for i, course := range coursesData.Items {
-		items[i] = items[i].Assign(course)
+	for _, course := range coursesData.Items {
+		items = append(items, CourseListSchema{}.Assign(course))
 	}
 	c.Data.Items = items
 	return c

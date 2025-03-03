@@ -427,16 +427,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "default": "\"\"",
                         "description": "Filter By Title",
                         "name": "title",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "default": "\"\"",
                         "description": "Filter By Instructor's Name Or Username",
-                        "name": "intructor",
+                        "name": "instructor",
                         "in": "query"
                     },
                     {

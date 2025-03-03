@@ -660,15 +660,13 @@ paths:
         in: query
         name: limit
         type: integer
-      - default: '""'
-        description: Filter By Title
+      - description: Filter By Title
         in: query
         name: title
         type: string
-      - default: '""'
-        description: Filter By Instructor's Name Or Username
+      - description: Filter By Instructor's Name Or Username
         in: query
-        name: intructor
+        name: instructor
         type: string
       - description: Filter By Free Status
         in: query
