@@ -84,6 +84,11 @@ func (c CourseManager) FilterCoursesByInstructor(db *ent.Client, fibCtx *fiber.C
 }
 
 func (c CourseManager) GetCourseBySlug(db *ent.Client, ctx context.Context, slug string) *ent.Course {
-	course, _ := db.Course.Query().Where(course.SlugEQ(slug)).Only(ctx)
+	course, _ := db.Course.Query().
+		Where(course.SlugEQ(slug)).
+		WithInstructor().
+		WithCategory().
+		WithTags().
+		Only(ctx)
 	return course
 }

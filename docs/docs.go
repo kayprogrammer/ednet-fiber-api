@@ -454,6 +454,38 @@ const docTemplate = `{
                 }
             }
         },
+        "/courses/{slug}": {
+            "get": {
+                "description": "This endpoint retrieves the details of a particular course",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Retrieve Course Details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Course Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.CourseResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            }
+        },
         "/general/site-detail": {
             "get": {
                 "description": "This endpoint retrieves few details of the site/application.",
@@ -882,6 +914,19 @@ const docTemplate = `{
                 "DifficultyAdvanced"
             ]
         },
+        "course.EnrollmentType": {
+            "type": "string",
+            "enum": [
+                "Open",
+                "Restricted",
+                "InviteOnly"
+            ],
+            "x-enum-varnames": [
+                "EnrollmentTypeOpen",
+                "EnrollmentTypeRestricted",
+                "EnrollmentTypeInviteOnly"
+            ]
+        },
         "courses.CategoryOrTagSchema": {
             "type": "object",
             "properties": {
@@ -889,6 +934,95 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "courses.CourseDetailSchema": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/courses.CategoryOrTagSchema"
+                },
+                "certification": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "difficulty": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/course.Difficulty"
+                        }
+                    ],
+                    "example": "Beginner"
+                },
+                "discount_price": {
+                    "type": "number"
+                },
+                "duration": {
+                    "description": "in minutes",
+                    "type": "integer"
+                },
+                "enrollment_type": {
+                    "$ref": "#/definitions/course.EnrollmentType"
+                },
+                "instructor": {
+                    "$ref": "#/definitions/base.UserDataSchema"
+                },
+                "intro_video_url": {
+                    "type": "string"
+                },
+                "is_free": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "is_published": {
+                    "type": "boolean"
+                },
+                "language": {
+                    "type": "string",
+                    "example": "English"
+                },
+                "lessons_count": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "price": {
+                    "type": "number",
+                    "example": 19.99
+                },
+                "quizzes_count": {
+                    "type": "integer"
+                },
+                "rating": {
+                    "type": "number",
+                    "example": 4.8
+                },
+                "reviews_count": {
+                    "type": "integer"
+                },
+                "slug": {
+                    "type": "string",
+                    "example": "go-programming-for-beginners"
+                },
+                "students_count": {
+                    "type": "integer",
+                    "example": 1200
+                },
+                "thumbnail_url": {
+                    "type": "string",
+                    "example": "https://ednet-images.com/courses/go.jpg"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Go Programming for Beginners"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -957,6 +1091,22 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "courses.CourseResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/courses.CourseDetailSchema"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },

@@ -209,11 +209,82 @@ definitions:
     - DifficultyBeginner
     - DifficultyIntermediate
     - DifficultyAdvanced
+  course.EnrollmentType:
+    enum:
+    - Open
+    - Restricted
+    - InviteOnly
+    type: string
+    x-enum-varnames:
+    - EnrollmentTypeOpen
+    - EnrollmentTypeRestricted
+    - EnrollmentTypeInviteOnly
   courses.CategoryOrTagSchema:
     properties:
       name:
         type: string
       slug:
+        type: string
+    type: object
+  courses.CourseDetailSchema:
+    properties:
+      category:
+        $ref: '#/definitions/courses.CategoryOrTagSchema'
+      certification:
+        type: boolean
+      created_at:
+        type: string
+      desc:
+        type: string
+      difficulty:
+        allOf:
+        - $ref: '#/definitions/course.Difficulty'
+        example: Beginner
+      discount_price:
+        type: number
+      duration:
+        description: in minutes
+        type: integer
+      enrollment_type:
+        $ref: '#/definitions/course.EnrollmentType'
+      instructor:
+        $ref: '#/definitions/base.UserDataSchema'
+      intro_video_url:
+        type: string
+      is_free:
+        example: false
+        type: boolean
+      is_published:
+        type: boolean
+      language:
+        example: English
+        type: string
+      lessons_count:
+        example: 20
+        type: integer
+      price:
+        example: 19.99
+        type: number
+      quizzes_count:
+        type: integer
+      rating:
+        example: 4.8
+        type: number
+      reviews_count:
+        type: integer
+      slug:
+        example: go-programming-for-beginners
+        type: string
+      students_count:
+        example: 1200
+        type: integer
+      thumbnail_url:
+        example: https://ednet-images.com/courses/go.jpg
+        type: string
+      title:
+        example: Go Programming for Beginners
+        type: string
+      updated_at:
         type: string
     type: object
   courses.CourseListSchema:
@@ -260,6 +331,17 @@ definitions:
         example: Go Programming for Beginners
         type: string
       updated_at:
+        type: string
+    type: object
+  courses.CourseResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/courses.CourseDetailSchema'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
         type: string
     type: object
   courses.CoursesResponseSchema:
@@ -678,6 +760,27 @@ paths:
           schema:
             $ref: '#/definitions/courses.CoursesResponseSchema'
       summary: Retrieve Latest Courses
+      tags:
+      - Courses
+  /courses/{slug}:
+    get:
+      description: This endpoint retrieves the details of a particular course
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.CourseResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      summary: Retrieve Course Details
       tags:
       - Courses
   /general/site-detail:

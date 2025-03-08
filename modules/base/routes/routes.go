@@ -40,6 +40,7 @@ func SetupRoutes(app *fiber.App, db *ent.Client) {
 	// Courses Routes (2)
 	coursesRouter := api.Group("/courses")
 	coursesRouter.Get("", courses.GetLatestCourses(db))
+	coursesRouter.Get("/:slug", courses.GetCourseDetails(db))
 }
 
 type HealthCheckSchema struct {

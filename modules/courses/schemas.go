@@ -24,6 +24,7 @@ func (c CategoryOrTagSchema) Assign(category *ent.Category, tag *ent.Tag) Catego
 	}
 	return c
 }
+
 // CourseListSchema - Summary of a course for listings
 type CourseListSchema struct {
 	Instructor    base.UserDataSchema `json:"instructor"`
@@ -67,7 +68,7 @@ func (c CourseListSchema) Assign(course *ent.Course) CourseListSchema {
 
 type CoursesResponseSchema struct {
 	base.ResponseSchema
-	Data  config.PaginationResponse[CourseListSchema] `json:"data"` 
+	Data config.PaginationResponse[CourseListSchema] `json:"data"`
 }
 
 func (c CoursesResponseSchema) Assign(coursesData *config.PaginationResponse[*ent.Course]) CoursesResponseSchema {
@@ -79,14 +80,13 @@ func (c CoursesResponseSchema) Assign(coursesData *config.PaginationResponse[*en
 	return c
 }
 
-
 // CourseDetailSchema - Full details of a course
 type CourseDetailSchema struct {
 	CourseListSchema
 	IntroVideoURL  *string               `json:"intro_video_url,omitempty"`
 	IsPublished    bool                  `json:"is_published"`
 	QuizzesCount   int                   `json:"quizzes_count"`
-	Duration       uint                   `json:"duration"` // in minutes
+	Duration       uint                  `json:"duration"` // in minutes
 	EnrollmentType course.EnrollmentType `json:"enrollment_type"`
 	Certification  bool                  `json:"certification"`
 	ReviewsCount   int                   `json:"reviews_count"`
@@ -103,4 +103,9 @@ func (c CourseDetailSchema) Assign(course *ent.Course) CourseDetailSchema {
 	c.Certification = course.Certification
 	c.ReviewsCount = course.ReviewsCount
 	return c
+}
+
+type CourseResponseSchema struct {
+	base.ResponseSchema
+	Data CourseDetailSchema `json:"data"`
 }
