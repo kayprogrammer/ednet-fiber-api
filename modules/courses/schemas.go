@@ -109,3 +109,29 @@ type CourseResponseSchema struct {
 	base.ResponseSchema
 	Data CourseDetailSchema `json:"data"`
 }
+
+type LessonSchema struct {
+	Title         string `json:"title"`
+	Slug          string `json:"slug"`
+	Desc          string `json:"desc"`
+	VideoUrl      string `json:"video_url"`
+	Content       string `json:"content"`
+	Order         uint `json:"order"`
+	Duration      uint `json:"duration"`
+	IsPublished   bool `json:"is_published"`
+	IsFreePreview bool `json:"is_free_preview"`
+}
+
+// Assign values from Lesson to LessonSchema
+func (l LessonSchema) Assign(lesson *ent.Lesson) LessonSchema {
+	l.Title = lesson.Title
+	l.Slug = lesson.Slug
+	l.Desc = lesson.Description
+	l.VideoUrl = lesson.VideoURL
+	l.Content = lesson.Content
+	l.Order = lesson.Order
+	l.Duration = lesson.Duration
+	l.IsPublished = lesson.IsPublished
+	l.IsFreePreview = lesson.IsFreePreview
+	return l
+}
