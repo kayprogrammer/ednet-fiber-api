@@ -32,7 +32,9 @@ func (c CourseManager) GetCategoryBySlug(db *ent.Client, ctx context.Context, sl
 func (c CourseManager) ApplyCourseFilters(fibCtx *fiber.Ctx, query *ent.CourseQuery) *ent.CourseQuery {
 	filters := map[string]func(string){
 		"title": func(value string) { query.Where(course.TitleContains(value)) },
-		"instructor": func(value string) { query.Where(course.HasInstructorWith(user.Or(user.NameContains(value), user.UsernameContains(value)))) },
+		"instructor": func(value string) {
+			query.Where(course.HasInstructorWith(user.Or(user.NameContains(value), user.UsernameContains(value))))
+		},
 		"isFree": func(value string) {
 			if freeStatus, err := strconv.ParseBool(value); err == nil {
 				query.Where(course.IsFreeEQ(freeStatus))

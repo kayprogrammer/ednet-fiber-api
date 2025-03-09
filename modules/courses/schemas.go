@@ -126,7 +126,7 @@ type LessonSchema struct {
 func (l LessonSchema) Assign(lesson *ent.Lesson) LessonSchema {
 	l.Title = lesson.Title
 	l.Slug = lesson.Slug
-	l.Desc = lesson.Description
+	l.Desc = lesson.Desc
 	l.VideoUrl = lesson.VideoURL
 	l.Content = lesson.Content
 	l.Order = lesson.Order
