@@ -135,3 +135,17 @@ func (l LessonSchema) Assign(lesson *ent.Lesson) LessonSchema {
 	l.IsFreePreview = lesson.IsFreePreview
 	return l
 }
+
+type LessonsResponseSchema struct {
+	base.ResponseSchema
+	Data config.PaginationResponse[LessonSchema] `json:"data"`
+}
+
+func (c LessonsResponseSchema) Assign(lessonsData *config.PaginationResponse[*ent.Lesson]) LessonsResponseSchema {
+	items := c.Data.Items
+	for _, lesson := range lessonsData.Items {
+		items = append(items, LessonSchema{}.Assign(lesson))
+	}
+	c.Data.Items = items
+	return c
+}

@@ -486,6 +486,51 @@ const docTemplate = `{
                 }
             }
         },
+        "/courses/{slug}/lessons": {
+            "get": {
+                "description": "This endpoint retrieves paginated responses of a course lessons",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Retrieve Course Lessons",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Current Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Page Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter By Title",
+                        "name": "title",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter By Free Preview",
+                        "name": "isFreePreview",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.LessonsResponseSchema"
+                        }
+                    }
+                }
+            }
+        },
         "/general/site-detail": {
             "get": {
                 "description": "This endpoint retrieves few details of the site/application.",
@@ -899,6 +944,29 @@ const docTemplate = `{
                 }
             }
         },
+        "config.PaginationResponse-courses_LessonSchema": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/courses.LessonSchema"
+                    }
+                },
+                "items_count": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
         "course.Difficulty": {
             "type": "string",
             "enum": [
@@ -1115,6 +1183,54 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/config.PaginationResponse-courses_CourseListSchema"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "courses.LessonSchema": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "is_free_preview": {
+                    "type": "boolean"
+                },
+                "is_published": {
+                    "type": "boolean"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "video_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "courses.LessonsResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/config.PaginationResponse-courses_LessonSchema"
                 },
                 "message": {
                     "type": "string",

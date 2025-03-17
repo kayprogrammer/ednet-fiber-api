@@ -39,7 +39,7 @@ func GetLatestCourses(db *ent.Client) fiber.Handler {
 func GetCourseDetails(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
-		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"))
+		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), true)
 		if course == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Course Not Found"))
 		}
@@ -47,6 +47,30 @@ func GetCourseDetails(db *ent.Client) fiber.Handler {
 			ResponseSchema: base.ResponseMessage("Course Details Fetched Successfully"),
 			Data:           CourseDetailSchema{}.Assign(course),
 		}
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Retrieve Course Lessons
+// @Description This endpoint retrieves paginated responses of a course lessons
+// @Tags Courses
+// @Param page query int false "Current Page" default(1)
+// @Param limit query int false "Page Limit" default(100)
+// @Param title query string false "Filter By Title"
+// @Param isFreePreview query bool false "Filter By Free Preview"
+// @Success 200 {object} LessonsResponseSchema
+// @Router /courses/{slug}/lessons [get]
+func GetCourseLessons(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		course := courseManager.GetCourseBySlug(db, c.Context(), c.Params("slug"), false)
+		if course == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Course Not Found"))
+		}
+		lessons := courseManager.GetLessons(db, course, c)
+
+		response := LessonsResponseSchema{
+			ResponseSchema: base.ResponseMessage("Lessons Fetched Successfully"),
+		}.Assign(lessons)
 		return c.Status(200).JSON(response)
 	}
 }

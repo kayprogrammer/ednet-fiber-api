@@ -9,6 +9,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/category"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/lesson"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 )
 
@@ -85,12 +86,40 @@ func (c CourseManager) FilterCoursesByInstructor(db *ent.Client, fibCtx *fiber.C
 	return courses
 }
 
-func (c CourseManager) GetCourseBySlug(db *ent.Client, ctx context.Context, slug string) *ent.Course {
-	course, _ := db.Course.Query().
-		Where(course.SlugEQ(slug)).
-		WithInstructor().
-		WithCategory().
-		WithTags().
-		Only(ctx)
+func (c CourseManager) GetCourseBySlug(db *ent.Client, ctx context.Context, slug string, loaded bool) *ent.Course {
+	query := db.Course.Query().
+		Where(course.SlugEQ(slug))
+	if loaded {
+		query = query.
+			WithInstructor().
+			WithCategory().
+			WithTags()
+	}
+	course, _ := query.Only(ctx)
 	return course
+}
+
+func (c CourseManager) ApplyLessonFilters(fibCtx *fiber.Ctx, query *ent.LessonQuery) *ent.LessonQuery {
+	filters := map[string]func(string){
+		"title": func(value string) { query.Where(lesson.TitleContains(value)) },
+		"isFreePreview": func(value string) {
+			if freeStatus, err := strconv.ParseBool(value); err == nil {
+				query.Where(lesson.IsFreePreviewEQ(freeStatus))
+			}
+		},
+	}
+	// Apply filters dynamically
+	for param, apply := range filters {
+		if value := fibCtx.Query(param); value != "" {
+			apply(value)
+		}
+	}
+	return query
+}
+
+func (c CourseManager) GetLessons(db *ent.Client, course *ent.Course, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Lesson] {
+	query := db.Lesson.Query().Where(lesson.CourseID(course.ID))
+	query = c.ApplyLessonFilters(fibCtx, query)
+	lessons := config.PaginateModel(fibCtx, query)
+	return lessons
 }

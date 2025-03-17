@@ -197,6 +197,21 @@ definitions:
       total_pages:
         type: integer
     type: object
+  config.PaginationResponse-courses_LessonSchema:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/courses.LessonSchema'
+        type: array
+      items_count:
+        type: integer
+      limit:
+        type: integer
+      page:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   course.Difficulty:
     enum:
     - Beginner
@@ -348,6 +363,38 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/config.PaginationResponse-courses_CourseListSchema'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  courses.LessonSchema:
+    properties:
+      content:
+        type: string
+      desc:
+        type: string
+      duration:
+        type: integer
+      is_free_preview:
+        type: boolean
+      is_published:
+        type: boolean
+      order:
+        type: integer
+      slug:
+        type: string
+      title:
+        type: string
+      video_url:
+        type: string
+    type: object
+  courses.LessonsResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/config.PaginationResponse-courses_LessonSchema'
       message:
         example: Data fetched/created/updated/deleted
         type: string
@@ -781,6 +828,36 @@ paths:
           schema:
             $ref: '#/definitions/base.NotFoundErrorExample'
       summary: Retrieve Course Details
+      tags:
+      - Courses
+  /courses/{slug}/lessons:
+    get:
+      description: This endpoint retrieves paginated responses of a course lessons
+      parameters:
+      - default: 1
+        description: Current Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Page Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Filter By Title
+        in: query
+        name: title
+        type: string
+      - description: Filter By Free Preview
+        in: query
+        name: isFreePreview
+        type: boolean
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.LessonsResponseSchema'
+      summary: Retrieve Course Lessons
       tags:
       - Courses
   /general/site-detail:
