@@ -857,6 +857,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/courses.LessonsResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
       summary: Retrieve Course Lessons
       tags:
       - Courses

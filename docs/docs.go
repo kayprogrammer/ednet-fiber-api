@@ -527,6 +527,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/courses.LessonsResponseSchema"
                         }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
                     }
                 }
             }

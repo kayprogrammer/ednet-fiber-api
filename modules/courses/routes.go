@@ -58,6 +58,7 @@ func GetCourseDetails(db *ent.Client) fiber.Handler {
 // @Param limit query int false "Page Limit" default(100)
 // @Param title query string false "Filter By Title"
 // @Param isFreePreview query bool false "Filter By Free Preview"
+// @Success 404 {object} base.NotFoundErrorExample
 // @Success 200 {object} LessonsResponseSchema
 // @Router /courses/{slug}/lessons [get]
 func GetCourseLessons(db *ent.Client) fiber.Handler {
