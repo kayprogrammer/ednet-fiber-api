@@ -454,6 +454,38 @@ const docTemplate = `{
                 }
             }
         },
+        "/courses/{course_slug}/lessons/{lesson_slug}": {
+            "get": {
+                "description": "This endpoint retrieves the details of a particular lesson",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Retrieve Lesson Details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Course Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.LessonResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            }
+        },
         "/courses/{slug}": {
             "get": {
                 "description": "This endpoint retrieves the details of a particular course",
@@ -494,6 +526,13 @@ const docTemplate = `{
                 ],
                 "summary": "Retrieve Course Lessons",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Course Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "default": 1,
@@ -950,13 +989,13 @@ const docTemplate = `{
                 }
             }
         },
-        "config.PaginationResponse-courses_LessonSchema": {
+        "config.PaginationResponse-courses_LessonListSchema": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/courses.LessonSchema"
+                        "$ref": "#/definitions/courses.LessonListSchema"
                     }
                 },
                 "items_count": {
@@ -1200,7 +1239,7 @@ const docTemplate = `{
                 }
             }
         },
-        "courses.LessonSchema": {
+        "courses.LessonDetailSchema": {
             "type": "object",
             "properties": {
                 "content": {
@@ -1224,6 +1263,10 @@ const docTemplate = `{
                 "slug": {
                     "type": "string"
                 },
+                "thumbnail_url": {
+                    "type": "string",
+                    "example": "https://ednet-images.com/lessons/go.jpg"
+                },
                 "title": {
                     "type": "string"
                 },
@@ -1232,11 +1275,57 @@ const docTemplate = `{
                 }
             }
         },
+        "courses.LessonListSchema": {
+            "type": "object",
+            "properties": {
+                "desc": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "is_free_preview": {
+                    "type": "boolean"
+                },
+                "is_published": {
+                    "type": "boolean"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "thumbnail_url": {
+                    "type": "string",
+                    "example": "https://ednet-images.com/lessons/go.jpg"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "courses.LessonResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/courses.LessonDetailSchema"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
         "courses.LessonsResponseSchema": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/config.PaginationResponse-courses_LessonSchema"
+                    "$ref": "#/definitions/config.PaginationResponse-courses_LessonListSchema"
                 },
                 "message": {
                     "type": "string",

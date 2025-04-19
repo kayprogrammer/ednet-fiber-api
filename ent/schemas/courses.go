@@ -111,6 +111,7 @@ func (Lesson) Fields() []ent.Field {
 		field.String("title").NotEmpty(),
 		field.String("slug").Unique(),
 		field.Text("desc"),
+		field.String("thumbnail_url").NotEmpty(),
 		field.String("video_url").Optional(),
 		field.Text("content").Optional(),
 		field.Uint("order"),

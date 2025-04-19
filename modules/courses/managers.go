@@ -123,3 +123,14 @@ func (c CourseManager) GetLessons(db *ent.Client, course *ent.Course, fibCtx *fi
 	lessons := config.PaginateModel(fibCtx, query)
 	return lessons
 }
+
+func (c CourseManager) GetCourseLessonBySlug(db *ent.Client, ctx context.Context, slug string, loaded bool) *ent.Lesson {
+	query := db.Lesson.Query().
+		Where(lesson.SlugEQ(slug))
+	if loaded {
+		query = query.
+			WithCourse()
+	}
+	lesson, _ := query.Only(ctx)
+	return lesson
+}

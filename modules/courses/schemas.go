@@ -110,42 +110,59 @@ type CourseResponseSchema struct {
 	Data CourseDetailSchema `json:"data"`
 }
 
-type LessonSchema struct {
+type LessonListSchema struct {
 	Title         string `json:"title"`
 	Slug          string `json:"slug"`
 	Desc          string `json:"desc"`
-	VideoUrl      string `json:"video_url"`
-	Content       string `json:"content"`
-	Order         uint `json:"order"`
-	Duration      uint `json:"duration"`
-	IsPublished   bool `json:"is_published"`
-	IsFreePreview bool `json:"is_free_preview"`
+	Order         uint   `json:"order"`
+	Duration      uint   `json:"duration"`
+	IsPublished   bool   `json:"is_published"`
+	IsFreePreview bool   `json:"is_free_preview"`
+	ThumbnailURL  string `json:"thumbnail_url" example:"https://ednet-images.com/lessons/go.jpg"`
 }
 
 // Assign values from Lesson to LessonSchema
-func (l LessonSchema) Assign(lesson *ent.Lesson) LessonSchema {
+func (l LessonListSchema) Assign(lesson *ent.Lesson) LessonListSchema {
 	l.Title = lesson.Title
 	l.Slug = lesson.Slug
 	l.Desc = lesson.Desc
-	l.VideoUrl = lesson.VideoURL
-	l.Content = lesson.Content
 	l.Order = lesson.Order
 	l.Duration = lesson.Duration
 	l.IsPublished = lesson.IsPublished
 	l.IsFreePreview = lesson.IsFreePreview
+	l.ThumbnailURL = lesson.ThumbnailURL
 	return l
 }
 
 type LessonsResponseSchema struct {
 	base.ResponseSchema
-	Data config.PaginationResponse[LessonSchema] `json:"data"`
+	Data config.PaginationResponse[LessonListSchema] `json:"data"`
 }
 
 func (c LessonsResponseSchema) Assign(lessonsData *config.PaginationResponse[*ent.Lesson]) LessonsResponseSchema {
 	items := c.Data.Items
 	for _, lesson := range lessonsData.Items {
-		items = append(items, LessonSchema{}.Assign(lesson))
+		items = append(items, LessonListSchema{}.Assign(lesson))
 	}
 	c.Data.Items = items
 	return c
+}
+
+type LessonDetailSchema struct {
+	LessonListSchema
+	VideoUrl string `json:"video_url"`
+	Content  string `json:"content"`
+}
+
+// Assign values from Lesson to LessonDetailSchema
+func (l LessonDetailSchema) Assign(lesson *ent.Lesson) LessonDetailSchema {
+	l.LessonListSchema = l.LessonListSchema.Assign(lesson)
+	l.VideoUrl = lesson.VideoURL
+	l.Content = lesson.Content
+	return l
+}
+
+type LessonResponseSchema struct {
+	base.ResponseSchema
+	Data LessonDetailSchema `json:"data"`
 }
