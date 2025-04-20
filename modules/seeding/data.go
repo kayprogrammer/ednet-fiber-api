@@ -29,6 +29,7 @@ type LessonData struct {
 
 type QuizData struct {
 	Title       string
+	Slug      string
 	Description string
 	Duration    int
 	Questions   []QuestionData
@@ -68,6 +69,7 @@ var CoursesToCreate = []CourseData{
 		},
 		Quiz: &QuizData{
 			Title:       "Go Basics Quiz",
+			Slug: "go-basics-quiz",
 			Description: "Assess your understanding of Go fundamentals.",
 			Duration:    10,
 			Questions: []QuestionData{
@@ -109,6 +111,7 @@ var CoursesToCreate = []CourseData{
 		},
 		Quiz: &QuizData{
 			Title:       "Advanced Go Quiz",
+			Slug: "advanced-go-quiz",
 			Description: "Test your advanced knowledge of Go.",
 			Duration:    15,
 			Questions: []QuestionData{
@@ -150,6 +153,7 @@ var CoursesToCreate = []CourseData{
 		},
 		Quiz: &QuizData{
 			Title:       "Go Web Quiz",
+			Slug: "go-web-quiz",
 			Description: "Evaluate your web dev skills in Go.",
 			Duration:    12,
 			Questions: []QuestionData{
@@ -191,6 +195,7 @@ var CoursesToCreate = []CourseData{
 		},
 		Quiz: &QuizData{
 			Title:       "REST API Quiz",
+			Slug: "rest-api-quiz",
 			Description: "Review your REST API knowledge.",
 			Duration:    10,
 			Questions: []QuestionData{
@@ -232,6 +237,7 @@ var CoursesToCreate = []CourseData{
 		},
 		Quiz: &QuizData{
 			Title:       "Go Testing Quiz",
+			Slug: "go-testing-quiz",
 			Description: "Review your understanding of testing in Go.",
 			Duration:    8,
 			Questions: []QuestionData{

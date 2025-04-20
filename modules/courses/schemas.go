@@ -174,3 +174,58 @@ type LessonResponseSchema struct {
 	base.ResponseSchema
 	Data LessonDetailSchema `json:"data"`
 }
+
+type QuizListSchema struct {
+	ID             string `json:"id"`
+	Title          string `json:"title"`
+	Description    string `json:"description"`
+	TotalQuestions int    `json:"total_questions"`
+	Duration       int    `json:"duration"`
+	IsPublished    bool   `json:"is_published"`
+}
+
+// Assign values from Quix to QuizListSchema
+func (q QuizListSchema) Assign(quiz *ent.Quiz) QuizListSchema {
+	q.Title = quiz.Title
+	q.Description = quiz.Description
+	q.TotalQuestions = len(quiz.Edges.Questions)
+	q.Duration = quiz.Duration
+	q.IsPublished = quiz.IsPublished
+	return q
+}
+
+type QuizDetailSchema struct {
+	QuizListSchema
+	Questions []QuestionSchema `json:"questions"`
+}
+
+// Assign values from Quiz to QuizDetailSchema
+func (q QuizDetailSchema) Assign(quiz *ent.Quiz) QuizDetailSchema {
+	q.QuizListSchema = q.QuizListSchema.Assign(quiz)
+	questions := quiz.Edges.Questions
+	parsedQuestions := []QuestionSchema{}
+	for _, question := range questions {
+		parsedOptions := []QuestionOptionSchema{}
+		for _, option := range question.Edges.Options {
+			parsedOptions = append(parsedOptions, QuestionOptionSchema{Text: option.Text, IsCorrect: option.IsCorrect})
+		}
+		parsedQuestions = append(parsedQuestions, QuestionSchema{
+			Text: question.Text,
+			Order: question.Order,
+			Options: parsedOptions,
+		})
+	}
+	q.Questions = parsedQuestions
+	return q
+}
+
+type QuestionSchema struct {
+	Order int    `json:"order"`
+	Text  string `json:"text"`
+	Options []QuestionOptionSchema `json:"options"`
+}
+
+type QuestionOptionSchema struct {
+	Text  string `json:"text"`
+	IsCorrect bool `json:"is_correct"`
+}
