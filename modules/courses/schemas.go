@@ -58,8 +58,8 @@ func (c CourseListSchema) Assign(course *ent.Course) CourseListSchema {
 	c.Price = course.Price
 	c.IsFree = course.IsFree
 	c.Rating = course.Rating
-	c.StudentsCount = course.StudentsCount
-	c.LessonsCount = course.LessonsCount
+	c.StudentsCount = len(course.Edges.Enrollments)
+	c.LessonsCount = len(course.Edges.Lessons)
 	c.Category = c.Category.Assign(course.Edges.Category, nil)
 	c.CreatedAt = course.CreatedAt
 	c.UpdatedAt = course.CreatedAt
@@ -77,6 +77,10 @@ func (c CoursesResponseSchema) Assign(coursesData *config.PaginationResponse[*en
 		items = append(items, CourseListSchema{}.Assign(course))
 	}
 	c.Data.Items = items
+	c.Data.ItemsCount = coursesData.ItemsCount
+	c.Data.Page = coursesData.Page
+	c.Data.TotalPages = coursesData.TotalPages
+	c.Data.Limit = coursesData.Limit
 	return c
 }
 
@@ -97,11 +101,11 @@ func (c CourseDetailSchema) Assign(course *ent.Course) CourseDetailSchema {
 	c.CourseListSchema = c.CourseListSchema.Assign(course)
 	c.IntroVideoURL = &course.IntroVideoURL
 	c.IsPublished = course.IsPublished
-	c.QuizzesCount = course.QuizzesCount
+	c.QuizzesCount = len(course.Edges.Quizzes)
 	c.Duration = course.Duration
 	c.EnrollmentType = course.EnrollmentType
 	c.Certification = course.Certification
-	c.ReviewsCount = course.ReviewsCount
+	c.ReviewsCount = len(course.Edges.Reviews)
 	return c
 }
 
@@ -139,13 +143,17 @@ type LessonsResponseSchema struct {
 	Data config.PaginationResponse[LessonListSchema] `json:"data"`
 }
 
-func (c LessonsResponseSchema) Assign(lessonsData *config.PaginationResponse[*ent.Lesson]) LessonsResponseSchema {
-	items := c.Data.Items
+func (l LessonsResponseSchema) Assign(lessonsData *config.PaginationResponse[*ent.Lesson]) LessonsResponseSchema {
+	items := l.Data.Items
 	for _, lesson := range lessonsData.Items {
 		items = append(items, LessonListSchema{}.Assign(lesson))
 	}
-	c.Data.Items = items
-	return c
+	l.Data.Items = items
+	l.Data.ItemsCount = lessonsData.ItemsCount
+	l.Data.Page = lessonsData.Page
+	l.Data.TotalPages = lessonsData.TotalPages
+	l.Data.Limit = lessonsData.Limit
+	return l
 }
 
 type LessonDetailSchema struct {

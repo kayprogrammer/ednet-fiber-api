@@ -2,33 +2,121 @@ package seeding
 
 import (
 	"context"
+	"log"
+	"math/rand"
+	"time"
 
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
-	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
-	"github.com/kayprogrammer/ednet-fiber-api/modules/instructors"
 )
 
-func createCategory(db *ent.Client, ctx context.Context) *ent.Category {
-	name := "Programming"
-	category_ := courseManager.GetCategoryByName(db, ctx, name)
-	if category_ == nil {
-		category_ = adminManager.CreateCategory(db, ctx, name) 
+func createCategories(db *ent.Client, ctx context.Context) []*ent.Category {
+	categories := courseManager.GetCategories(db, ctx)
+	if len(categories) < 1 {
+		for _, categoryName := range CategoriesToCreate {
+			category_ := courseManager.GetCategoryByName(db, ctx, categoryName)
+			if category_ == nil {
+				adminManager.CreateCategory(db, ctx, categoryName) 
+			}
+		}
+		categories = courseManager.GetCategories(db, ctx)
 	}
-	return category_
+	return categories
 }
 
-func createCourse(db *ent.Client, ctx context.Context, instructor *ent.User, category *ent.Category) *ent.Course {
-	courseData := instructors.CourseCreateSchema{
-		Title: "Test Course", Desc: "This is a test course", Language: "English",
-		Difficulty: course.DifficultyBeginner, Duration: 240, IsFree: false, Price: 100,
-		DiscountPrice: 80, EnrollmentType: course.EnrollmentTypeOpen, Certification: true,
-	} 
+func createCourses(db *ent.Client, ctx context.Context, instructor *ent.User, categories []*ent.Category) []*ent.Course {
+	log.Println("Seeding Courses Data...")
+	courses := courseManager.GetAll(db, ctx)
+	if len(courses) < 1 {
+		// Loop through each course in your Courses slice and create it
+		for _, course := range CoursesToCreate {
+			// Shuffle the list
+			rand.New(rand.NewSource(time.Now().UnixNano()))
+			rand.Shuffle(len(categories), func(i, j int) {
+				categories[i], categories[j] = categories[j], categories[i]
+			})
+			// Create the Course record
+			courseRecord, err := db.Course.Create().
+				SetInstructor(instructor).
+				SetTitle(course.Title).
+				SetSlug(course.Slug).
+				SetCategory(categories[0]).
+				SetDesc(course.Desc).
+				SetThumbnailURL(course.ThumbnailUrl).
+				SetIntroVideoURL(course.IntroVideoUrl).
+				SetDuration(course.Duration).
+				SetIsFree(course.IsFree).
+				SetPrice(course.Price).
+				SetDiscountPrice(course.DiscountPrice).
+				Save(ctx)
 
-	course_ := courseManager.GetCourseByName(db, ctx, courseData.Title)
-	if course_ == nil {
-		thumbnailUrl := "https://ednet-images.com/150"
-		introVideoUrl := "https://ednet-videos.com/watch?v=introvideo"
-		course_ = instructorManager.CreateCourse(db, ctx, instructor, category, thumbnailUrl, &introVideoUrl, courseData)
+			if err != nil {
+				log.Fatalf("Failed to create course '%s': %v", course.Title, err)
+			}
+
+			// Create Lessons for this Course
+			for _, lesson := range course.Lessons {
+				_, err := db.Lesson.Create().
+					SetCourseID(courseRecord.ID).
+					SetTitle(lesson.Title).
+					SetSlug(lesson.Slug).
+					SetDesc(lesson.Desc).
+					SetThumbnailURL(lesson.ThumbnailUrl).
+					SetVideoURL(lesson.VideoUrl).
+					SetContent(lesson.Content).
+					SetOrder(lesson.Order).
+					SetDuration(lesson.Duration).
+					SetIsPublished(lesson.IsPublished).
+					SetIsFreePreview(lesson.IsFreePreview).
+					Save(ctx)
+
+				if err != nil {
+					log.Fatalf("Failed to create lesson '%s': %v", lesson.Title, err)
+				}
+			}
+
+			// If the course has a quiz, create it
+			if course.Quiz != nil {
+				quizRecord, err := db.Quiz.Create().
+					SetCourseID(courseRecord.ID).
+					SetTitle(course.Quiz.Title).
+					SetDescription(course.Quiz.Description).
+					SetDuration(course.Quiz.Duration).
+					SetIsPublished(true).
+					Save(ctx)
+
+				if err != nil {
+					log.Fatalf("Failed to create quiz for course '%s': %v", course.Title, err)
+				}
+
+				// Create Questions for this Quiz
+				for _, questionData := range course.Quiz.Questions {
+					questionRecord, err := db.Question.Create().
+						SetQuizID(quizRecord.ID).
+						SetText(questionData.Text).
+						SetOrder(questionData.Order).
+						Save(ctx)
+
+					if err != nil {
+						log.Fatalf("Failed to create question '%s': %v", questionData.Text, err)
+					}
+
+					// Create Options for this Question
+					for _, optionData := range questionData.Options {
+						_, err := db.QuestionOption.Create().
+							SetQuestionID(questionRecord.ID).
+							SetText(optionData.Text).
+							SetIsCorrect(optionData.IsCorrect).
+							Save(ctx)
+
+						if err != nil {
+							log.Fatalf("Failed to create option for question '%s': %v", questionData.Text, err)
+						}
+					}
+				}
+			}
+		}
+		courses = courseManager.GetAll(db, ctx)
 	}
-	return course_
+	log.Println("Seeding Courses Data Completed Successfully.")
+	return courses
 }

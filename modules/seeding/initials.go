@@ -13,7 +13,7 @@ func CreateInitialData(db *ent.Client, ctx context.Context, cfg config.Config) {
 	createAdmin(db, ctx, cfg)
 	createStudent(db, ctx, cfg)
 	instructor := createInstructor(db, ctx, cfg)
-	category := createCategory(db, ctx)
-	createCourse(db, ctx, instructor, category)
+	categories := createCategories(db, ctx)
+	createCourses(db, ctx, instructor, categories)
 	log.Println("Initial Data Created")
 }

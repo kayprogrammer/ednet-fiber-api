@@ -227,10 +227,12 @@ definitions:
   course.EnrollmentType:
     enum:
     - Open
+    - Open
     - Restricted
     - InviteOnly
     type: string
     x-enum-varnames:
+    - DefaultEnrollmentType
     - EnrollmentTypeOpen
     - EnrollmentTypeRestricted
     - EnrollmentTypeInviteOnly
@@ -849,7 +851,12 @@ paths:
       parameters:
       - description: Course Slug
         in: path
-        name: slug
+        name: course_slug
+        required: true
+        type: string
+      - description: Lesson Slug
+        in: path
+        name: lesson_slug
         required: true
         type: string
       responses:

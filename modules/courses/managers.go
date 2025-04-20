@@ -59,7 +59,16 @@ func (c CourseManager) ApplyCourseFilters(fibCtx *fiber.Ctx, query *ent.CourseQu
 	return query
 }
 
-func (c CourseManager) GetAll(db *ent.Client, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Course] {
+func (c CourseManager) GetAll(db *ent.Client, ctx context.Context) []*ent.Course {
+	courses := db.Course.Query().
+		WithInstructor().
+		WithCategory().
+		WithTags().
+		AllX(ctx)
+	return courses
+}
+
+func (c CourseManager) GetAllPaginated(db *ent.Client, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Course] {
 	query := db.Course.Query().
 		WithInstructor().
 		WithCategory().
@@ -69,6 +78,8 @@ func (c CourseManager) GetAll(db *ent.Client, fibCtx *fiber.Ctx) *config.Paginat
 	courses := config.PaginateModel(fibCtx, query)
 	return courses
 }
+
+
 
 func (c CourseManager) GetCourseByName(db *ent.Client, ctx context.Context, name string) *ent.Course {
 	course, _ := db.Course.Query().Where(course.TitleEQ(name)).First(ctx)
@@ -118,7 +129,7 @@ func (c CourseManager) ApplyLessonFilters(fibCtx *fiber.Ctx, query *ent.LessonQu
 }
 
 func (c CourseManager) GetLessons(db *ent.Client, course *ent.Course, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Lesson] {
-	query := db.Lesson.Query().Where(lesson.CourseID(course.ID))
+	query := db.Lesson.Query().Where(lesson.CourseID(course.ID)).Order(ent.Asc(lesson.FieldOrder))
 	query = c.ApplyLessonFilters(fibCtx, query)
 	lessons := config.PaginateModel(fibCtx, query)
 	return lessons

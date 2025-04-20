@@ -74,13 +74,9 @@ func (Course) Fields() []ent.Field {
 		field.Bool("is_free").Default(false),
 		field.Float("price").Default(0.0),
 		field.Float("discount_price").Optional(),
-		field.Enum("enrollment_type").Values("Open", "Restricted", "InviteOnly"),
-		field.Bool("certification").Default(false),
+		field.Enum("enrollment_type").Values("Open", "Restricted", "InviteOnly").Default("Open"),
+		field.Bool("certification").Default(true),
 		field.Float("rating").Default(0.0),
-		field.Int("reviews_count").Default(0),
-		field.Int("students_count").Default(0),
-		field.Int("lessons_count").Default(0),
-		field.Int("quizzes_count").Default(0),
 	)
 }
 

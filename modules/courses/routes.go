@@ -21,7 +21,7 @@ var courseManager = CourseManager{}
 // @Router /courses [get]
 func GetLatestCourses(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		courses := courseManager.GetAll(db, c)
+		courses := courseManager.GetAllPaginated(db, c)
 		response := CoursesResponseSchema{
 			ResponseSchema: base.ResponseMessage("Courses Fetched Successfully"),
 		}.Assign(courses)
@@ -80,7 +80,8 @@ func GetCourseLessons(db *ent.Client) fiber.Handler {
 // @Summary Retrieve Lesson Details
 // @Description This endpoint retrieves the details of a particular lesson
 // @Tags Courses
-// @Param slug path string true "Course Slug"
+// @Param course_slug path string true "Course Slug"
+// @Param lesson_slug path string true "Lesson Slug"
 // @Success 200 {object} LessonResponseSchema
 // @Success 404 {object} base.NotFoundErrorExample
 // @Router /courses/{course_slug}/lessons/{lesson_slug} [get]

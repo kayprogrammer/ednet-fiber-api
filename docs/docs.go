@@ -465,7 +465,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Course Slug",
-                        "name": "slug",
+                        "name": "course_slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lesson Slug",
+                        "name": "lesson_slug",
                         "in": "path",
                         "required": true
                     }
@@ -1031,10 +1038,12 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "Open",
+                "Open",
                 "Restricted",
                 "InviteOnly"
             ],
             "x-enum-varnames": [
+                "DefaultEnrollmentType",
                 "EnrollmentTypeOpen",
                 "EnrollmentTypeRestricted",
                 "EnrollmentTypeInviteOnly"
