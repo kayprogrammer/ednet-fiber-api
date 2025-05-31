@@ -9,6 +9,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/enrollment"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/predicate"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/courses"
 )
@@ -39,13 +40,19 @@ func (p ProfileManager) Update(db *ent.Client, ctx context.Context, user *ent.Us
 	return updatedUser
 }
 
-func (p ProfileManager) GetAllPaginatedEnrolledCourses(db *ent.Client, fibCtx *fiber.Ctx, user *ent.User) *config.PaginationResponse[*ent.Course] {
+func (p ProfileManager) GetAllPaginatedEnrolledCourses(db *ent.Client, fibCtx *fiber.Ctx, user *ent.User, status string) *config.PaginationResponse[*ent.Course] {
+	enrollmentPredicates := []predicate.Enrollment{
+		enrollment.UserID(user.ID),
+		enrollment.PaymentStatusEQ(enrollment.PaymentStatusSuccessful),
+	}
+
+	if status != "" {
+		enrollmentPredicates = append(enrollmentPredicates, enrollment.StatusEQ(enrollment.Status(status)))
+	}
+
 	query := db.Course.Query().
 		Where(
-			course.HasEnrollmentsWith(
-				enrollment.UserID(user.ID),
-				enrollment.PaymentStatusEQ(enrollment.PaymentStatusSuccessful),
-			),
+			course.HasEnrollmentsWith(enrollmentPredicates...),
 		).
 		WithInstructor().
 		WithCategory().

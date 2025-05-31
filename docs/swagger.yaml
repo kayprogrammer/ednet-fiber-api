@@ -1140,6 +1140,10 @@ paths:
         in: query
         name: title
         type: string
+      - description: Filter By Status (inactive, active, completed, dropped)
+        in: query
+        name: status
+        type: string
       - description: Filter By Instructor's Name Or Username
         in: query
         name: instructor

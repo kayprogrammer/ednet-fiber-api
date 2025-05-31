@@ -810,6 +810,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "Filter By Status (inactive, active, completed, dropped)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Filter By Instructor's Name Or Username",
                         "name": "instructor",
                         "in": "query"

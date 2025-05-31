@@ -79,6 +79,7 @@ func UpdateProfile(db *ent.Client) fiber.Handler {
 // @Param page query int false "Current Page" default(1)
 // @Param limit query int false "Page Limit" default(100)
 // @Param title query string false "Filter By Title"
+// @Param status query string false "Filter By Status (inactive, active, completed, dropped)"
 // @Param instructor query string false "Filter By Instructor's Name Or Username"
 // @Param isFree query bool false "Filter By Free Status"
 // @Success 200 {object} courses.CoursesResponseSchema
@@ -88,7 +89,7 @@ func UpdateProfile(db *ent.Client) fiber.Handler {
 func GetEnrolledCourses(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		user := base.RequestUser(c)
-		coursesData := profileManager.GetAllPaginatedEnrolledCourses(db, c, user)
+		coursesData := profileManager.GetAllPaginatedEnrolledCourses(db, c, user, c.Query("status", ""))
 		response := courses.CoursesResponseSchema{
 			ResponseSchema: base.ResponseMessage("Courses Fetched Successfully"),
 		}.Assign(coursesData)
