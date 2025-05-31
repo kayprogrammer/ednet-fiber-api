@@ -5,6 +5,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/base"
+	"github.com/kayprogrammer/ednet-fiber-api/modules/courses"
 )
 
 var profileManager = ProfileManager{}
@@ -68,6 +69,29 @@ func UpdateProfile(db *ent.Client) fiber.Handler {
 			ResponseSchema: base.ResponseMessage("Profile fetched"),
 			Data:           ProfileSchema{}.Assign(updatedUser),
 		}
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Get Your Enrolled Courses
+// @Description `This endpoint allows a user to view his/her enrolled courses`
+// @Tags Profiles
+// @Param page query int false "Current Page" default(1)
+// @Param limit query int false "Page Limit" default(100)
+// @Param title query string false "Filter By Title"
+// @Param instructor query string false "Filter By Instructor's Name Or Username"
+// @Param isFree query bool false "Filter By Free Status"
+// @Success 200 {object} courses.CoursesResponseSchema
+// @Failure 401 {object} base.UnauthorizedErrorExample
+// @Router /profiles/courses [get]
+// @Security BearerAuth
+func GetEnrolledCourses(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user := base.RequestUser(c)
+		coursesData := profileManager.GetAllPaginatedEnrolledCourses(db, c, user)
+		response := courses.CoursesResponseSchema{
+			ResponseSchema: base.ResponseMessage("Courses Fetched Successfully"),
+		}.Assign(coursesData)
 		return c.Status(200).JSON(response)
 	}
 }

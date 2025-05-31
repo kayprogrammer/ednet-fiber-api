@@ -767,6 +767,68 @@
                     }
                 }
             }
+        },
+        "/profiles/courses": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "`This endpoint allows a user to view his/her enrolled courses`",
+                "tags": [
+                    "Profiles"
+                ],
+                "summary": "Get Your Enrolled Courses",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Current Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Page Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter By Title",
+                        "name": "title",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter By Instructor's Name Or Username",
+                        "name": "instructor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter By Free Status",
+                        "name": "isFree",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.CoursesResponseSchema"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/base.UnauthorizedErrorExample"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1307,10 +1369,12 @@
             ],
             "properties": {
                 "cancel_url": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "https://domain-example.com/payment-cancelled"
                 },
                 "success_url": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "https://domain-example.com/payment-success"
                 }
             }
         },

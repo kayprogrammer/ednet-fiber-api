@@ -77,7 +77,7 @@ func CreateCheckoutSession (cfg config.Config, course *ent.Course, successUrl st
 
 	s, err := session.New(params)
 	if err != nil {
-		log.Println("Stripe error:", err)
+		log.Println("Stripe error: ", err)
 		err := config.RequestErr(config.ERR_SERVER_ERROR, "Something went wrong")
 		return nil, &err
 	}

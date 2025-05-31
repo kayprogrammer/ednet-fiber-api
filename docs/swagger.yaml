@@ -375,8 +375,10 @@ definitions:
   courses.EnrollForACourseSchema:
     properties:
       cancel_url:
+        example: https://domain-example.com/payment-cancelled
         type: string
       success_url:
+        example: https://domain-example.com/payment-success
         type: string
     required:
     - cancel_url
@@ -1118,6 +1120,46 @@ paths:
       security:
       - BearerAuth: []
       summary: Update Your Profile
+      tags:
+      - Profiles
+  /profiles/courses:
+    get:
+      description: '`This endpoint allows a user to view his/her enrolled courses`'
+      parameters:
+      - default: 1
+        description: Current Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Page Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Filter By Title
+        in: query
+        name: title
+        type: string
+      - description: Filter By Instructor's Name Or Username
+        in: query
+        name: instructor
+        type: string
+      - description: Filter By Free Status
+        in: query
+        name: isFree
+        type: boolean
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.CoursesResponseSchema'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.UnauthorizedErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Get Your Enrolled Courses
       tags:
       - Profiles
 produces:
