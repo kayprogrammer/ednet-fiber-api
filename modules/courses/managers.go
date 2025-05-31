@@ -9,6 +9,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/category"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/enrollment"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/lesson"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 )
@@ -144,4 +145,41 @@ func (c CourseManager) GetCourseLessonBySlug(db *ent.Client, ctx context.Context
 	}
 	lesson, _ := query.Only(ctx)
 	return lesson
+}
+
+func (c CourseManager) GetExistentEnrollmentByUserAndCourse (db *ent.Client, ctx context.Context, user *ent.User, course *ent.Course, loaded bool) *ent.Enrollment {
+	query := db.Enrollment.Query().
+		Where(
+			enrollment.UserID(user.ID),
+			enrollment.CourseID(course.ID),
+		)
+	if loaded {
+		query = query.
+			WithCourse().
+			WithUser()
+	}
+	enrollmentObj, _ := query.Only(ctx)
+	return enrollmentObj
+}
+
+func (c CourseManager) CreateEnrollment (db *ent.Client, ctx context.Context, user *ent.User, course *ent.Course, checkoutUrl string) (*ent.Enrollment, *config.ErrorResponse) {
+	existentEnrollment := c.GetExistentEnrollmentByUserAndCourse(db, ctx, user, course, false)
+	if existentEnrollment != nil {
+		err := config.RequestErr(config.ERR_NOT_ALLOWED, "Enrollment has been created already")
+		return nil, &err
+	}
+	enrollmentQuery := db.Enrollment.
+		Create().
+		SetCourse(course).
+		SetUser(user).
+		SetCheckoutURL(checkoutUrl)
+	
+		if course.IsFree {
+			enrollmentQuery = enrollmentQuery.SetStatus(enrollment.StatusActive).
+			SetPaymentStatus(enrollment.PaymentStatusSuccessful)
+		}
+	enrollmentObj := enrollmentQuery.SaveX(ctx)
+	enrollmentObj.Edges.User = user
+	enrollmentObj.Edges.Course = course
+	return enrollmentObj, nil
 }

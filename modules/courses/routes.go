@@ -102,3 +102,45 @@ func GetCourseLessonDetails(db *ent.Client) fiber.Handler {
 		return c.Status(200).JSON(response)
 	}
 }
+
+// @Summary Enroll for a course
+// @Description This endpoint allows a user to enroll for a specific course
+// @Tags Courses
+// @Param slug path string true "Course Slug"
+// @Param enrollment body EnrollForACourseSchema true "Enrollment object"
+// @Success 200 {object} EnrollmentResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Success 400 {object} base.InvalidErrorExample
+// @Failure 422 {object} base.ValidationErrorExample
+// @Router /courses/{slug}/enroll [post]
+// @Security BearerAuth
+func EnrollForACourse(db *ent.Client, cfg config.Config) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), true)
+		if course == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Course Not Found"))
+		}
+		data := EnrollForACourseSchema{}
+		// Validate request
+		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+
+		checkoutUrl, err := CreateCheckoutSession(cfg, course, data.SuccessUrl, data.CancelUrl)
+		if err != nil {
+			return config.APIError(c, 500, *err)
+		}
+		enrollment, err := courseManager.CreateEnrollment(db, ctx, user, course, *checkoutUrl)
+		if err != nil {
+			return config.APIError(c, 400, *err)
+		}
+
+		response := EnrollmentResponseSchema{
+			ResponseSchema: base.ResponseMessage("Enrollment Created Successfully"),
+			Data:           EnrollmentSchema{}.Assign(enrollment),
+		}
+		return c.Status(200).JSON(response)
+	}
+}

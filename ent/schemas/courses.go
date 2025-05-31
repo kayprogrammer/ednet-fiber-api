@@ -73,7 +73,7 @@ func (Course) Fields() []ent.Field {
 		field.Bool("is_published").Default(false),
 		field.Bool("is_free").Default(false),
 		field.Float("price").Default(0.0),
-		field.Float("discount_price").Optional(),
+		field.Float("discount_price").Default(0.0),
 		field.Enum("enrollment_type").Values("Open", "Restricted", "InviteOnly").Default("Open"),
 		field.Bool("certification").Default(true),
 		field.Float("rating").Default(0.0),
@@ -135,7 +135,9 @@ func (Enrollment) Fields() []ent.Field {
 		CommonFields,
 		field.UUID("user_id", uuid.UUID{}),
 		field.UUID("course_id", uuid.UUID{}),
-		field.Enum("status").Values("active", "completed", "dropped").Default("active"),
+		field.Enum("status").Values("inactive", "active", "completed", "dropped").Default("inactive"),
+		field.Enum("payment_status").Values("successful", "cancelled", "pending", "failed").Default("pending"),
+		field.String("checkout_url"),
 		field.Int("progress").Default(0), // Percentage (0-100)
 	)
 }

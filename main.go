@@ -50,7 +50,7 @@ func main() {
 
 	app.Use(swagger.New(swaggerCfg))
 
-	routes.SetupRoutes(app, db)
+	routes.SetupRoutes(app, db, cfg)
 	defer db.Close()
 	log.Fatal(app.Listen(fmt.Sprintf(":%s", cfg.Port)))
 }

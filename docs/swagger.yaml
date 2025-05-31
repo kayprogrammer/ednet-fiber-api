@@ -372,6 +372,42 @@ definitions:
         example: success
         type: string
     type: object
+  courses.EnrollForACourseSchema:
+    properties:
+      cancel_url:
+        type: string
+      success_url:
+        type: string
+    required:
+    - cancel_url
+    - success_url
+    type: object
+  courses.EnrollmentResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/courses.EnrollmentSchema'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  courses.EnrollmentSchema:
+    properties:
+      checkout_url:
+        type: string
+      course:
+        $ref: '#/definitions/courses.CourseListSchema'
+      payment_status:
+        $ref: '#/definitions/enrollment.PaymentStatus'
+      progress:
+        type: integer
+      status:
+        $ref: '#/definitions/enrollment.Status'
+      user:
+        $ref: '#/definitions/base.UserDataSchema'
+    type: object
   courses.LessonDetailSchema:
     properties:
       content:
@@ -438,6 +474,34 @@ definitions:
         example: success
         type: string
     type: object
+  enrollment.PaymentStatus:
+    enum:
+    - pending
+    - successful
+    - cancelled
+    - pending
+    - failed
+    type: string
+    x-enum-varnames:
+    - DefaultPaymentStatus
+    - PaymentStatusSuccessful
+    - PaymentStatusCancelled
+    - PaymentStatusPending
+    - PaymentStatusFailed
+  enrollment.Status:
+    enum:
+    - inactive
+    - inactive
+    - active
+    - completed
+    - dropped
+    type: string
+    x-enum-varnames:
+    - DefaultStatus
+    - StatusInactive
+    - StatusActive
+    - StatusCompleted
+    - StatusDropped
   general.SiteDetailResponseSchema:
     properties:
       data:
@@ -890,6 +954,43 @@ paths:
           schema:
             $ref: '#/definitions/base.NotFoundErrorExample'
       summary: Retrieve Course Details
+      tags:
+      - Courses
+  /courses/{slug}/enroll:
+    post:
+      description: This endpoint allows a user to enroll for a specific course
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Enrollment object
+        in: body
+        name: enrollment
+        required: true
+        schema:
+          $ref: '#/definitions/courses.EnrollForACourseSchema'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.EnrollmentResponseSchema'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.InvalidErrorExample'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Enroll for a course
       tags:
       - Courses
   /courses/{slug}/lessons:

@@ -6,5 +6,9 @@ import (
 )
 
 func RequestUser(c *fiber.Ctx) *ent.User {
-	return c.Locals("user").(*ent.User)
+	user := c.Locals("user")
+	if user != nil {
+		return user.(*ent.User)
+	}
+	return nil
 }

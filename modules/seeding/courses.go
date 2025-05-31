@@ -79,6 +79,7 @@ func createCourses(db *ent.Client, ctx context.Context, instructor *ent.User, ca
 				quizRecord, err := db.Quiz.Create().
 					SetCourseID(courseRecord.ID).
 					SetTitle(course.Quiz.Title).
+					SetSlug(course.Quiz.Slug).
 					SetDescription(course.Quiz.Description).
 					SetDuration(course.Quiz.Duration).
 					SetIsPublished(true).
@@ -117,6 +118,6 @@ func createCourses(db *ent.Client, ctx context.Context, instructor *ent.User, ca
 		}
 		courses = courseManager.GetAll(db, ctx)
 	}
-	log.Println("Seeding Courses Data Completed Successfully.")
+	log.Println("Courses Data Seeded Successfully.")
 	return courses
 }

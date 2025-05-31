@@ -55,6 +55,7 @@ func registerTranslations(param string) {
 	registerTranslation("gt", "Value is too small!", translator)
 	registerTranslation("datetime", "Invalid datetime!", translator)
 	registerTranslation("required", "This field is required.", translator)
+	registerTranslation("url", "Enter a valid url.", translator)
 	registerTranslation("required_if", "This field is required.", translator)
 	registerTranslation("required_without", "This field is required.", translator)
 	// registerTranslation("reply_type_validator", "Invalid reply type. Choices are REVIEW, PARAGRAPH_COMMENT", translator)

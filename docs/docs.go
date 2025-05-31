@@ -525,6 +525,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/courses/{slug}/enroll": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint allows a user to enroll for a specific course",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Enroll for a course",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Course Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Enrollment object",
+                        "name": "enrollment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/courses.EnrollForACourseSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.EnrollmentResponseSchema"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.InvalidErrorExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
+                        }
+                    }
+                }
+            }
+        },
         "/courses/{slug}/lessons": {
             "get": {
                 "description": "This endpoint retrieves paginated responses of a course lessons",
@@ -1248,6 +1306,60 @@ const docTemplate = `{
                 }
             }
         },
+        "courses.EnrollForACourseSchema": {
+            "type": "object",
+            "required": [
+                "cancel_url",
+                "success_url"
+            ],
+            "properties": {
+                "cancel_url": {
+                    "type": "string"
+                },
+                "success_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "courses.EnrollmentResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/courses.EnrollmentSchema"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "courses.EnrollmentSchema": {
+            "type": "object",
+            "properties": {
+                "checkout_url": {
+                    "type": "string"
+                },
+                "course": {
+                    "$ref": "#/definitions/courses.CourseListSchema"
+                },
+                "payment_status": {
+                    "$ref": "#/definitions/enrollment.PaymentStatus"
+                },
+                "progress": {
+                    "type": "integer"
+                },
+                "status": {
+                    "$ref": "#/definitions/enrollment.Status"
+                },
+                "user": {
+                    "$ref": "#/definitions/base.UserDataSchema"
+                }
+            }
+        },
         "courses.LessonDetailSchema": {
             "type": "object",
             "properties": {
@@ -1345,6 +1457,40 @@ const docTemplate = `{
                     "example": "success"
                 }
             }
+        },
+        "enrollment.PaymentStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "successful",
+                "cancelled",
+                "pending",
+                "failed"
+            ],
+            "x-enum-varnames": [
+                "DefaultPaymentStatus",
+                "PaymentStatusSuccessful",
+                "PaymentStatusCancelled",
+                "PaymentStatusPending",
+                "PaymentStatusFailed"
+            ]
+        },
+        "enrollment.Status": {
+            "type": "string",
+            "enum": [
+                "inactive",
+                "inactive",
+                "active",
+                "completed",
+                "dropped"
+            ],
+            "x-enum-varnames": [
+                "DefaultStatus",
+                "StatusInactive",
+                "StatusActive",
+                "StatusCompleted",
+                "StatusDropped"
+            ]
         },
         "general.SiteDetailResponseSchema": {
             "type": "object",

@@ -6,6 +6,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/enrollment"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/base"
 )
 
@@ -210,8 +211,8 @@ func (q QuizDetailSchema) Assign(quiz *ent.Quiz) QuizDetailSchema {
 			parsedOptions = append(parsedOptions, QuestionOptionSchema{Text: option.Text, IsCorrect: option.IsCorrect})
 		}
 		parsedQuestions = append(parsedQuestions, QuestionSchema{
-			Text: question.Text,
-			Order: question.Order,
+			Text:    question.Text,
+			Order:   question.Order,
 			Options: parsedOptions,
 		})
 	}
@@ -220,12 +221,41 @@ func (q QuizDetailSchema) Assign(quiz *ent.Quiz) QuizDetailSchema {
 }
 
 type QuestionSchema struct {
-	Order int    `json:"order"`
-	Text  string `json:"text"`
+	Order   int                    `json:"order"`
+	Text    string                 `json:"text"`
 	Options []QuestionOptionSchema `json:"options"`
 }
 
 type QuestionOptionSchema struct {
-	Text  string `json:"text"`
-	IsCorrect bool `json:"is_correct"`
+	Text      string `json:"text"`
+	IsCorrect bool   `json:"is_correct"`
+}
+
+type EnrollForACourseSchema struct {
+	SuccessUrl string `json:"success_url" validate:"required,url" example:"https://domain-example.com/payment-success"`
+	CancelUrl  string `json:"cancel_url" validate:"required,url" example:"https://domain-example.com/payment-cancelled"`
+}
+
+type EnrollmentSchema struct {
+	User          base.UserDataSchema      `json:"user"`
+	Course        CourseListSchema         `json:"course"`
+	Status        enrollment.Status        `json:"status"`
+	PaymentStatus enrollment.PaymentStatus `json:"payment_status"`
+	CheckoutURL   string                   `json:"checkout_url"`
+	Progress      int                      `json:"progress"`
+}
+
+func (e EnrollmentSchema) Assign(enrollmentObj *ent.Enrollment) EnrollmentSchema {
+	e.User = e.User.Assign(enrollmentObj.Edges.User)
+	e.Course = e.Course.Assign(enrollmentObj.Edges.Course)
+	e.Status = enrollmentObj.Status
+	e.PaymentStatus = enrollmentObj.PaymentStatus
+	e.CheckoutURL = enrollmentObj.CheckoutURL
+	e.Progress = enrollmentObj.Progress
+	return e
+}
+
+type EnrollmentResponseSchema struct {
+	base.ResponseSchema
+	Data EnrollmentSchema `json:"data"`
 }

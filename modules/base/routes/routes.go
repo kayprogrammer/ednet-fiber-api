@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/accounts"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/courses"
@@ -10,7 +11,8 @@ import (
 )
 
 // All Endpoints (50)
-func SetupRoutes(app *fiber.App, db *ent.Client) {
+func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
+
 	api := app.Group("/api/v1")
 	// HealthCheck Route (1)
 	api.Get("/healthcheck", HealthCheck)
@@ -43,6 +45,7 @@ func SetupRoutes(app *fiber.App, db *ent.Client) {
 	coursesRouter.Get("/:slug", courses.GetCourseDetails(db))
 	coursesRouter.Get("/:slug/lessons", courses.GetCourseLessons(db))
 	coursesRouter.Get("/:course_slug/lessons/:lesson_slug", courses.GetCourseLessonDetails(db))
+	coursesRouter.Post("/:slug/enroll", accounts.AuthMiddleware(db), courses.EnrollForACourse(db, cfg))
 }
 
 type HealthCheckSchema struct {
