@@ -17,6 +17,7 @@ var courseManager = CourseManager{}
 // @Param title query string false "Filter By Title"
 // @Param instructor query string false "Filter By Instructor's Name Or Username"
 // @Param isFree query bool false "Filter By Free Status"
+// @Param sortByRating query string false "Sort By Rating (asc or desc)"
 // @Success 200 {object} CoursesResponseSchema
 // @Router /courses [get]
 func GetLatestCourses(db *ent.Client) fiber.Handler {
@@ -39,7 +40,7 @@ func GetLatestCourses(db *ent.Client) fiber.Handler {
 func GetCourseDetails(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
-		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), true)
+		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), nil, true)
 		if course == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Course Not Found"))
 		}
@@ -64,7 +65,7 @@ func GetCourseDetails(db *ent.Client) fiber.Handler {
 // @Router /courses/{slug}/lessons [get]
 func GetCourseLessons(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		course := courseManager.GetCourseBySlug(db, c.Context(), c.Params("slug"), false)
+		course := courseManager.GetCourseBySlug(db, c.Context(), c.Params("slug"), nil, false)
 		if course == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Course Not Found"))
 		}
@@ -118,7 +119,7 @@ func EnrollForACourse(db *ent.Client, cfg config.Config) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		user := base.RequestUser(c)
-		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), true)
+		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), nil, true)
 		if course == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Course Not Found"))
 		}

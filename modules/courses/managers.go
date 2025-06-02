@@ -2,8 +2,11 @@ package courses
 
 import (
 	"context"
+	"fmt"
 	"strconv"
+	"strings"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/gofiber/fiber/v2"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
@@ -11,6 +14,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/enrollment"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/lesson"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/review"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 )
 
@@ -42,6 +46,11 @@ func (c CourseManager) ApplyCourseFilters(fibCtx *fiber.Ctx, query *ent.CourseQu
 				query.Where(course.IsFreeEQ(freeStatus))
 			}
 		},
+		"isPublished": func(value string) {
+			if publishedStatus, err := strconv.ParseBool(value); err == nil {
+				query.Where(course.IsPublishedEQ(publishedStatus))
+			}
+		},
 	}
 	// Apply filters dynamically
 	for param, apply := range filters {
@@ -50,15 +59,30 @@ func (c CourseManager) ApplyCourseFilters(fibCtx *fiber.Ctx, query *ent.CourseQu
 		}
 	}
 
-	// Sorting by rating
-	switch fibCtx.Query("sortByRating") {
-	case "desc":
-		query.Order(ent.Desc(course.FieldRating))
-	case "asc":
-		query.Order(ent.Asc(course.FieldRating))
+	sortBy := fibCtx.Query("sortByRating")
+	if sortBy == "asc" || sortBy == "desc" {
+		query = query.Order(func(s *sql.Selector) {
+			// Use COALESCE to handle NULL values and avoid syntax errors
+			avgExpr := fmt.Sprintf(
+				"COALESCE((SELECT AVG(%s) FROM %s WHERE %s = %s.%s), 0)",
+				review.FieldRating,
+				review.Table,
+				review.CourseColumn,
+				course.Table,
+				course.FieldID,
+			)
+			
+			// Apply sort order based on variable
+			if strings.ToLower(sortBy) == "desc" {
+				s.OrderBy(sql.Desc(avgExpr))
+			} else {
+				s.OrderBy(avgExpr)
+			}
+		})
 	}
 	return query
 }
+
 
 func (c CourseManager) GetAll(db *ent.Client, ctx context.Context) []*ent.Course {
 	courses := db.Course.Query().
@@ -71,13 +95,16 @@ func (c CourseManager) GetAll(db *ent.Client, ctx context.Context) []*ent.Course
 
 func (c CourseManager) GetAllPaginated(db *ent.Client, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Course] {
 	query := db.Course.Query().
+		Where(course.IsPublishedEQ(true)).
 		WithInstructor().
 		WithCategory().
-		WithTags()
+		WithTags().
+		WithReviews().
+		WithEnrollments().
+		WithLessons()
 
 	query = c.ApplyCourseFilters(fibCtx, query)
-	courses := config.PaginateModel(fibCtx, query)
-	return courses
+	return config.PaginateModel(fibCtx, query)
 }
 
 
@@ -90,6 +117,7 @@ func (c CourseManager) GetCourseByName(db *ent.Client, ctx context.Context, name
 func (c CourseManager) FilterCoursesByInstructor(db *ent.Client, fibCtx *fiber.Ctx, instructor *ent.User) *config.PaginationResponse[*ent.Course] {
 	query := db.Course.Query().
 		Where(course.InstructorIDEQ(instructor.ID)).
+		Where(course.IsPublishedEQ(true)).
 		WithInstructor().
 		WithCategory().
 		WithTags()
@@ -98,14 +126,20 @@ func (c CourseManager) FilterCoursesByInstructor(db *ent.Client, fibCtx *fiber.C
 	return courses
 }
 
-func (c CourseManager) GetCourseBySlug(db *ent.Client, ctx context.Context, slug string, loaded bool) *ent.Course {
+func (c CourseManager) GetCourseBySlug(db *ent.Client, ctx context.Context, slug string, instructor *ent.User, loaded bool) *ent.Course {
 	query := db.Course.Query().
 		Where(course.SlugEQ(slug))
+	if instructor != nil {
+		query = query.Where(course.InstructorIDEQ(instructor.ID))
+	}
 	if loaded {
 		query = query.
 			WithInstructor().
 			WithCategory().
-			WithTags()
+			WithTags().
+			WithQuizzes().
+			WithEnrollments().
+			WithReviews()
 	}
 	course, _ := query.Only(ctx)
 	return course
@@ -182,4 +216,17 @@ func (c CourseManager) CreateEnrollment (db *ent.Client, ctx context.Context, us
 	enrollmentObj.Edges.User = user
 	enrollmentObj.Edges.Course = course
 	return enrollmentObj, nil
+}
+
+func (c CourseManager) GetAverageRating(reviews []*ent.Review) float64 {
+    if len(reviews) == 0 {
+        return 0.0
+    }
+
+    var total float64
+    for _, review := range reviews {
+        total += float64(review.Rating) // Assuming Rating is int or float
+    }
+
+    return total / float64(len(reviews))
 }

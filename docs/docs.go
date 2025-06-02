@@ -442,6 +442,12 @@ const docTemplate = `{
                         "description": "Filter By Free Status",
                         "name": "isFree",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort By Rating (asc or desc)",
+                        "name": "sortByRating",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -670,6 +676,105 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/routes.HealthCheckSchema"
+                        }
+                    }
+                }
+            }
+        },
+        "/instructor/courses": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint retrieves paginated responses of the authenticated instructor courses",
+                "tags": [
+                    "Instructor"
+                ],
+                "summary": "Retrieve Instructor Courses",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Current Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Page Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter By Title",
+                        "name": "title",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter By Free Status",
+                        "name": "isFree",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter By Published Status",
+                        "name": "isPublished",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort By Rating (asc or desc)",
+                        "name": "sortByRating",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.CoursesResponseSchema"
+                        }
+                    }
+                }
+            }
+        },
+        "/instructor/courses/{slug}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint retrieves the details of a particular course for the authenticated instructor",
+                "tags": [
+                    "Instructor"
+                ],
+                "summary": "Retrieve Instructor Course Details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Course Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.CourseResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
                         }
                     }
                 }
@@ -1230,7 +1335,8 @@ const docTemplate = `{
                     "example": false
                 },
                 "is_published": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "example": false
                 },
                 "language": {
                     "type": "string",
@@ -1302,6 +1408,10 @@ const docTemplate = `{
                     "$ref": "#/definitions/base.UserDataSchema"
                 },
                 "is_free": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "is_published": {
                     "type": "boolean",
                     "example": false
                 },

@@ -62,3 +62,4 @@ func (p ProfileManager) GetAllPaginatedEnrolledCourses(db *ent.Client, fibCtx *f
 	courses := config.PaginateModel(fibCtx, query)
 	return courses
 }
+

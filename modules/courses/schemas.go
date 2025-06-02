@@ -38,6 +38,7 @@ type CourseListSchema struct {
 	DiscountPrice *float64            `json:"discount_price,omitempty"`
 	Price         float64             `json:"price" example:"19.99"`
 	IsFree        bool                `json:"is_free" example:"false"`
+	IsPublished   bool                `json:"is_published" example:"false"`
 	Rating        float64             `json:"rating" example:"4.8"`
 	StudentsCount int                 `json:"students_count" example:"1200"`
 	LessonsCount  int                 `json:"lessons_count" example:"20"`
@@ -58,7 +59,8 @@ func (c CourseListSchema) Assign(course *ent.Course) CourseListSchema {
 	c.DiscountPrice = &course.DiscountPrice
 	c.Price = course.Price
 	c.IsFree = course.IsFree
-	c.Rating = course.Rating
+	c.IsPublished = course.IsPublished
+	c.Rating = courseManager.GetAverageRating(course.Edges.Reviews)
 	c.StudentsCount = len(course.Edges.Enrollments)
 	c.LessonsCount = len(course.Edges.Lessons)
 	c.Category = c.Category.Assign(course.Edges.Category, nil)
@@ -89,7 +91,6 @@ func (c CoursesResponseSchema) Assign(coursesData *config.PaginationResponse[*en
 type CourseDetailSchema struct {
 	CourseListSchema
 	IntroVideoURL  *string               `json:"intro_video_url,omitempty"`
-	IsPublished    bool                  `json:"is_published"`
 	QuizzesCount   int                   `json:"quizzes_count"`
 	Duration       uint                  `json:"duration"` // in minutes
 	EnrollmentType course.EnrollmentType `json:"enrollment_type"`
@@ -101,7 +102,6 @@ type CourseDetailSchema struct {
 func (c CourseDetailSchema) Assign(course *ent.Course) CourseDetailSchema {
 	c.CourseListSchema = c.CourseListSchema.Assign(course)
 	c.IntroVideoURL = &course.IntroVideoURL
-	c.IsPublished = course.IsPublished
 	c.QuizzesCount = len(course.Edges.Quizzes)
 	c.Duration = course.Duration
 	c.EnrollmentType = course.EnrollmentType

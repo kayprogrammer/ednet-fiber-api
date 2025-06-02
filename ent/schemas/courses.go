@@ -76,7 +76,6 @@ func (Course) Fields() []ent.Field {
 		field.Float("discount_price").Default(0.0),
 		field.Enum("enrollment_type").Values("Open", "Restricted", "InviteOnly").Default("Open"),
 		field.Bool("certification").Default(true),
-		field.Float("rating").Default(0.0),
 	)
 }
 

@@ -2,7 +2,7 @@ package instructors
 
 import (
 	"context"
-
+	"github.com/gofiber/fiber/v2"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
@@ -46,4 +46,18 @@ func (i InstructorManager) GenerateCourseSlug(db *ent.Client, ctx context.Contex
 		uniqueSlug = baseSlug + "-" + config.GetRandomString(7)
 	}
 	return uniqueSlug
+}
+
+func (i InstructorManager) GetCoursesPaginated(db *ent.Client, fibCtx *fiber.Ctx, instructor *ent.User) *config.PaginationResponse[*ent.Course] {
+	query := db.Course.Query().
+		Where(course.InstructorIDEQ(instructor.ID)).
+		WithInstructor().
+		WithCategory().
+		WithTags().
+		WithReviews().
+		WithEnrollments().
+		WithLessons()
+	query = courseManager.ApplyCourseFilters(fibCtx, query)
+	courses := config.PaginateModel(fibCtx, query)
+	return courses
 }

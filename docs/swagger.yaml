@@ -272,6 +272,7 @@ definitions:
         example: false
         type: boolean
       is_published:
+        example: false
         type: boolean
       language:
         example: English
@@ -321,6 +322,9 @@ definitions:
       instructor:
         $ref: '#/definitions/base.UserDataSchema'
       is_free:
+        example: false
+        type: boolean
+      is_published:
         example: false
         type: boolean
       language:
@@ -903,6 +907,10 @@ paths:
         in: query
         name: isFree
         type: boolean
+      - description: Sort By Rating (asc or desc)
+        in: query
+        name: sortByRating
+        type: string
       responses:
         "200":
           description: OK
@@ -1056,6 +1064,71 @@ paths:
       summary: HealthCheck
       tags:
       - HealthCheck
+  /instructor/courses:
+    get:
+      description: This endpoint retrieves paginated responses of the authenticated
+        instructor courses
+      parameters:
+      - default: 1
+        description: Current Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Page Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Filter By Title
+        in: query
+        name: title
+        type: string
+      - description: Filter By Free Status
+        in: query
+        name: isFree
+        type: boolean
+      - description: Filter By Published Status
+        in: query
+        name: isPublished
+        type: boolean
+      - description: Sort By Rating (asc or desc)
+        in: query
+        name: sortByRating
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.CoursesResponseSchema'
+      security:
+      - BearerAuth: []
+      summary: Retrieve Instructor Courses
+      tags:
+      - Instructor
+  /instructor/courses/{slug}:
+    get:
+      description: This endpoint retrieves the details of a particular course for
+        the authenticated instructor
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.CourseResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Retrieve Instructor Course Details
+      tags:
+      - Instructor
   /profiles:
     get:
       description: '`This endpoint allows a user to view his/her profile`'

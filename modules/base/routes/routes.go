@@ -4,9 +4,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/accounts"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/courses"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/general"
+	"github.com/kayprogrammer/ednet-fiber-api/modules/instructors"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/profiles"
 )
 
@@ -47,6 +49,11 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 	coursesRouter.Get("/:slug/lessons", courses.GetCourseLessons(db))
 	coursesRouter.Get("/:course_slug/lessons/:lesson_slug", courses.GetCourseLessonDetails(db))
 	coursesRouter.Post("/:slug/enroll", accounts.AuthMiddleware(db), courses.EnrollForACourse(db, cfg))
+
+	// Instructor Routes (2)
+	instructorsRouter := api.Group("/instructor", accounts.AuthMiddleware(db, user.RoleInstructor))
+	instructorsRouter.Get("/courses", instructors.GetInstructorCourses(db))
+	instructorsRouter.Get("/courses/:slug", instructors.GetInstructorCourseDetails(db))
 }
 
 type HealthCheckSchema struct {
