@@ -741,6 +741,136 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint allows an instructor to create a course",
+                "tags": [
+                    "Instructor"
+                ],
+                "summary": "Create A Course",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "category_slug",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "certification",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "maxLength": 10000,
+                        "minLength": 10,
+                        "type": "string",
+                        "name": "desc",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "beginner",
+                            "beginner",
+                            "intermediate",
+                            "advanced"
+                        ],
+                        "type": "string",
+                        "x-enum-varnames": [
+                            "DefaultDifficulty",
+                            "DifficultyBeginner",
+                            "DifficultyIntermediate",
+                            "DifficultyAdvanced"
+                        ],
+                        "name": "difficulty",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "name": "discount_price",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "duration",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "open",
+                            "open",
+                            "restricted",
+                            "invite_only"
+                        ],
+                        "type": "string",
+                        "x-enum-varnames": [
+                            "DefaultEnrollmentType",
+                            "EnrollmentTypeOpen",
+                            "EnrollmentTypeRestricted",
+                            "EnrollmentTypeInviteOnly"
+                        ],
+                        "name": "enrollment_type",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "is_free",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "language",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "name": "price",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "maxLength": 50,
+                        "minLength": 10,
+                        "type": "string",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Thumbnail to upload",
+                        "name": "thumbnail",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Intro video to upload",
+                        "name": "intro_video",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.CourseResponseSchema"
+                        }
+                    }
+                }
             }
         },
         "/instructor/courses/{slug}": {
@@ -1253,10 +1383,10 @@ const docTemplate = `{
         "course.Difficulty": {
             "type": "string",
             "enum": [
-                "Beginner",
-                "Beginner",
-                "Intermediate",
-                "Advanced"
+                "beginner",
+                "beginner",
+                "intermediate",
+                "advanced"
             ],
             "x-enum-varnames": [
                 "DefaultDifficulty",
@@ -1268,10 +1398,10 @@ const docTemplate = `{
         "course.EnrollmentType": {
             "type": "string",
             "enum": [
-                "Open",
-                "Open",
-                "Restricted",
-                "InviteOnly"
+                "open",
+                "open",
+                "restricted",
+                "invite_only"
             ],
             "x-enum-varnames": [
                 "DefaultEnrollmentType",

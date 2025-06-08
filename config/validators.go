@@ -4,7 +4,9 @@ import (
 	"mime/multipart"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
 )
 
 // Validates if a account type value is the correct one
@@ -46,4 +48,14 @@ func ValidateImage(c *fiber.Ctx, name string, required bool) (*multipart.FileHea
 		return nil, &errData
 	}
 	return nil, nil
+}
+
+func DifficultyTypeValidator(fl validator.FieldLevel) bool {
+	fieldVal := fl.Field().Interface().(course.Difficulty)
+	return fieldVal == course.DifficultyBeginner || fieldVal == course.DifficultyAdvanced || fieldVal == course.DifficultyIntermediate
+}
+
+func EnrollmentTypeValidator(fl validator.FieldLevel) bool {
+	fieldVal := fl.Field().Interface().(course.EnrollmentType)
+	return fieldVal == course.EnrollmentTypeOpen || fieldVal == course.EnrollmentTypeInviteOnly || fieldVal == course.EnrollmentTypeRestricted
 }

@@ -36,7 +36,8 @@ func init() {
 	translator, _ = uni.GetTranslator("en")
 
 	// Register Custom Validators
-	// customValidator.RegisterValidation("account_type_validator", AccountTypeValidator)
+	customValidator.RegisterValidation("difficulty_type_validator", DifficultyTypeValidator)
+	customValidator.RegisterValidation("enrollment_type_validator", EnrollmentTypeValidator)
 
 	RegisterTagName()
 }
@@ -58,7 +59,8 @@ func registerTranslations(param string) {
 	registerTranslation("url", "Enter a valid url.", translator)
 	registerTranslation("required_if", "This field is required.", translator)
 	registerTranslation("required_without", "This field is required.", translator)
-	// registerTranslation("reply_type_validator", "Invalid reply type. Choices are REVIEW, PARAGRAPH_COMMENT", translator)
+	registerTranslation("difficulty_type_validator", "Invalid difficulty type. Choices are beginner, intermediate, advanced", translator)
+	registerTranslation("enrollment_type_validator", "Invalid difficulty type. Choices are open, restricted, inviteOnly", translator)
 
 	minErrMsg := fmt.Sprintf("%s characters min", param)
 	registerTranslation("min", minErrMsg, translator)

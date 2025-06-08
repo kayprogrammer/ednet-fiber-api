@@ -53,6 +53,7 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 	// Instructor Routes (2)
 	instructorsRouter := api.Group("/instructor", accounts.AuthMiddleware(db, user.RoleInstructor))
 	instructorsRouter.Get("/courses", instructors.GetInstructorCourses(db))
+	instructorsRouter.Post("/courses", instructors.CreateCourse(db))
 	instructorsRouter.Get("/courses/:slug", instructors.GetInstructorCourseDetails(db))
 }
 

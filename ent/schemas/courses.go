@@ -67,14 +67,14 @@ func (Course) Fields() []ent.Field {
 		field.String("intro_video_url").Optional(),
 		field.UUID("category_id", uuid.UUID{}),
 		field.String("language").Default("English"),
-		field.Enum("difficulty").Values("Beginner", "Intermediate", "Advanced").Default("Beginner"),
+		field.Enum("difficulty").Values("beginner", "intermediate", "advanced").Default("beginner"),
 		field.UUID("instructor_id", uuid.UUID{}),
 		field.Uint("duration").Default(0), // in minutes
 		field.Bool("is_published").Default(false),
 		field.Bool("is_free").Default(false),
 		field.Float("price").Default(0.0),
 		field.Float("discount_price").Default(0.0),
-		field.Enum("enrollment_type").Values("Open", "Restricted", "InviteOnly").Default("Open"),
+		field.Enum("enrollment_type").Values("open", "restricted", "invite_only").Default("open"),
 		field.Bool("certification").Default(true),
 	)
 }

@@ -214,10 +214,10 @@ definitions:
     type: object
   course.Difficulty:
     enum:
-    - Beginner
-    - Beginner
-    - Intermediate
-    - Advanced
+    - beginner
+    - beginner
+    - intermediate
+    - advanced
     type: string
     x-enum-varnames:
     - DefaultDifficulty
@@ -226,10 +226,10 @@ definitions:
     - DifficultyAdvanced
   course.EnrollmentType:
     enum:
-    - Open
-    - Open
-    - Restricted
-    - InviteOnly
+    - open
+    - open
+    - restricted
+    - invite_only
     type: string
     x-enum-varnames:
     - DefaultEnrollmentType
@@ -1103,6 +1103,97 @@ paths:
       security:
       - BearerAuth: []
       summary: Retrieve Instructor Courses
+      tags:
+      - Instructor
+    post:
+      description: This endpoint allows an instructor to create a course
+      parameters:
+      - in: formData
+        name: category_slug
+        required: true
+        type: string
+      - in: formData
+        name: certification
+        required: true
+        type: boolean
+      - in: formData
+        maxLength: 10000
+        minLength: 10
+        name: desc
+        required: true
+        type: string
+      - enum:
+        - beginner
+        - beginner
+        - intermediate
+        - advanced
+        in: formData
+        name: difficulty
+        required: true
+        type: string
+        x-enum-varnames:
+        - DefaultDifficulty
+        - DifficultyBeginner
+        - DifficultyIntermediate
+        - DifficultyAdvanced
+      - in: formData
+        name: discount_price
+        required: true
+        type: number
+      - in: formData
+        name: duration
+        required: true
+        type: integer
+      - enum:
+        - open
+        - open
+        - restricted
+        - invite_only
+        in: formData
+        name: enrollment_type
+        required: true
+        type: string
+        x-enum-varnames:
+        - DefaultEnrollmentType
+        - EnrollmentTypeOpen
+        - EnrollmentTypeRestricted
+        - EnrollmentTypeInviteOnly
+      - in: formData
+        name: is_free
+        required: true
+        type: boolean
+      - in: formData
+        name: language
+        required: true
+        type: string
+      - in: formData
+        name: price
+        required: true
+        type: number
+      - in: formData
+        maxLength: 50
+        minLength: 10
+        name: title
+        required: true
+        type: string
+      - description: Thumbnail to upload
+        in: formData
+        name: thumbnail
+        required: true
+        type: file
+      - description: Intro video to upload
+        in: formData
+        name: intro_video
+        required: true
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.CourseResponseSchema'
+      security:
+      - BearerAuth: []
+      summary: Create A Course
       tags:
       - Instructor
   /instructor/courses/{slug}:

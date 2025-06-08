@@ -18,6 +18,14 @@ func (i InstructorManager) CreateCourse(db *ent.Client, ctx context.Context, ins
 		SetThumbnailURL(thumbnailUrl).SetNillableIntroVideoURL(introVideoUrl).
 		SetPrice(data.Price).SetDiscountPrice(data.DiscountPrice).SetEnrollmentType(data.EnrollmentType).
 		SetCertification(data.Certification).SaveX(ctx)
+
+	// Edges reassignment to prevent reload
+	course.Edges.Instructor = instructor
+	course.Edges.Category = category
+	course.Edges.Reviews = []*ent.Review{}
+	course.Edges.Quizzes = []*ent.Quiz{}
+	course.Edges.Enrollments = []*ent.Enrollment{}
+	course.Edges.Lessons = []*ent.Lesson{}
 	return course
 }
 

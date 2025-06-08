@@ -34,6 +34,50 @@ func GetInstructorCourses(db *ent.Client) fiber.Handler {
 	}
 }
 
+// @Summary Create A Course
+// @Description This endpoint allows an instructor to create a course
+// @Tags Instructor
+// @Param course formData CourseCreateSchema true "Course object"
+// @Param thumbnail formData file true "Thumbnail to upload"
+// @Param intro_video formData file true "Intro video to upload"
+// @Success 200 {object} courses.CourseResponseSchema
+// @Router /instructor/courses [post]
+// @Security BearerAuth
+func CreateCourse(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		data := CourseCreateSchema{}
+		if errCode, errData := config.ValidateFormRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+		category := courseManager.GetCategoryBySlug(db, ctx, data.CategorySlug)
+		if category == nil {
+			return config.APIError(c, 422, config.ValidationErr("categorySlug", "Invalid category slug"))
+		}
+
+		// Check and validate files
+		thumbnail, err := config.ValidateFile(c, "thumbnail", true)
+		if err != nil {
+			return c.Status(422).JSON(err)
+		}
+		introVideo, err := config.ValidateFile(c, "intro_video", true)
+		if err != nil {
+			return c.Status(422).JSON(err)
+		}
+		thumbnailUrl := config.UploadFile(thumbnail, string(config.FF_THUMBNAIL))
+		introVideoUrl := config.UploadFile(introVideo, string(config.FF_INTRO_VIDEOS))
+
+
+		course := instructorManager.CreateCourse(db, ctx, user, category, thumbnailUrl, &introVideoUrl, data)
+		response := courses.CourseResponseSchema{
+			ResponseSchema: base.ResponseMessage("Course Created Successfully"),
+			Data: courses.CourseDetailSchema{}.Assign(course),
+		}
+		return c.Status(200).JSON(response)
+	}
+}
+
 // @Summary Retrieve Instructor Course Details
 // @Description This endpoint retrieves the details of a particular course for the authenticated instructor
 // @Tags Instructor

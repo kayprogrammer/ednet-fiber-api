@@ -36,7 +36,7 @@ func AuthMiddleware(db *ent.Client, allowedRoleParam ...user.Role) fiber.Handler
 		if len(allowedRoleParam) > 0 {
 			allowedRole := &allowedRoleParam[0]
 			if userObj.Role != *allowedRole {
-				return config.APIError(c, 401, config.RequestErr(config.ERR_INVALID_USER, fmt.Sprintf("For %ss only", userObj.Role)))
+				return config.APIError(c, 401, config.RequestErr(config.ERR_INVALID_USER, fmt.Sprintf("For %ss only", allowedRole)))
 			}
 		}
 		c.Locals("user", userObj)
