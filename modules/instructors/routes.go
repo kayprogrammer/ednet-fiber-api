@@ -11,7 +11,7 @@ import (
 var instructorManager = InstructorManager{}
 var courseManager = courses.CourseManager{}
 
-// @Summary Retrieve Instructor Courses
+// @Summary Retrieve Courses
 // @Description `This endpoint retrieves paginated responses of the authenticated instructor courses`
 // @Tags Instructor
 // @Param page query int false "Current Page" default(1)
@@ -77,7 +77,7 @@ func CreateCourse(db *ent.Client) fiber.Handler {
 	}
 }
 
-// @Summary Retrieve Instructor Course Details
+// @Summary Retrieve Course Details
 // @Description `This endpoint retrieves the details of a particular course for the authenticated instructor`
 // @Tags Instructor
 // @Param slug path string true "Course Slug"

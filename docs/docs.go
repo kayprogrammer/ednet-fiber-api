@@ -692,7 +692,7 @@ const docTemplate = `{
                 "tags": [
                     "Instructor"
                 ],
-                "summary": "Retrieve Instructor Courses",
+                "summary": "Retrieve Courses",
                 "parameters": [
                     {
                         "type": "integer",
@@ -883,7 +883,7 @@ const docTemplate = `{
                 "tags": [
                     "Instructor"
                 ],
-                "summary": "Retrieve Instructor Course Details",
+                "summary": "Retrieve Course Details",
                 "parameters": [
                     {
                         "type": "string",
