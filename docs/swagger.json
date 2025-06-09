@@ -681,7 +681,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "This endpoint retrieves paginated responses of the authenticated instructor courses",
+                "description": "`This endpoint retrieves paginated responses of the authenticated instructor courses`",
                 "tags": [
                     "Instructor"
                 ],
@@ -741,7 +741,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "This endpoint allows an instructor to create a course",
+                "description": "`This endpoint allows an instructor to create a course`",
                 "tags": [
                     "Instructor"
                 ],
@@ -756,8 +756,7 @@
                     {
                         "type": "boolean",
                         "name": "certification",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "maxLength": 10000,
@@ -818,11 +817,11 @@
                     {
                         "type": "boolean",
                         "name": "is_free",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
+                        "example": "English",
                         "name": "language",
                         "in": "formData",
                         "required": true
@@ -873,11 +872,186 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "This endpoint retrieves the details of a particular course for the authenticated instructor",
+                "description": "`This endpoint retrieves the details of a particular course for the authenticated instructor`",
                 "tags": [
                     "Instructor"
                 ],
                 "summary": "Retrieve Instructor Course Details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Course Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.CourseResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "`This endpoint allows an instructor to update a course`",
+                "tags": [
+                    "Instructor"
+                ],
+                "summary": "Update A Course",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Course Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "category_slug",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "certification",
+                        "in": "formData"
+                    },
+                    {
+                        "maxLength": 10000,
+                        "minLength": 10,
+                        "type": "string",
+                        "name": "desc",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "beginner",
+                            "beginner",
+                            "intermediate",
+                            "advanced"
+                        ],
+                        "type": "string",
+                        "x-enum-varnames": [
+                            "DefaultDifficulty",
+                            "DifficultyBeginner",
+                            "DifficultyIntermediate",
+                            "DifficultyAdvanced"
+                        ],
+                        "name": "difficulty",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "name": "discount_price",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "duration",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "open",
+                            "open",
+                            "restricted",
+                            "invite_only"
+                        ],
+                        "type": "string",
+                        "x-enum-varnames": [
+                            "DefaultEnrollmentType",
+                            "EnrollmentTypeOpen",
+                            "EnrollmentTypeRestricted",
+                            "EnrollmentTypeInviteOnly"
+                        ],
+                        "name": "enrollment_type",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "is_free",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "example": "English",
+                        "name": "language",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "name": "price",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "maxLength": 50,
+                        "minLength": 10,
+                        "type": "string",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Thumbnail to upload",
+                        "name": "thumbnail",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Intro video to upload",
+                        "name": "intro_video",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.CourseResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "`This endpoint allows an authenticated instructor to delete a course`",
+                "tags": [
+                    "Instructor"
+                ],
+                "summary": "Delete A Course",
                 "parameters": [
                     {
                         "type": "string",

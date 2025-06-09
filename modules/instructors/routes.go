@@ -12,7 +12,7 @@ var instructorManager = InstructorManager{}
 var courseManager = courses.CourseManager{}
 
 // @Summary Retrieve Instructor Courses
-// @Description This endpoint retrieves paginated responses of the authenticated instructor courses
+// @Description `This endpoint retrieves paginated responses of the authenticated instructor courses`
 // @Tags Instructor
 // @Param page query int false "Current Page" default(1)
 // @Param limit query int false "Page Limit" default(100)
@@ -35,7 +35,7 @@ func GetInstructorCourses(db *ent.Client) fiber.Handler {
 }
 
 // @Summary Create A Course
-// @Description This endpoint allows an instructor to create a course
+// @Description `This endpoint allows an instructor to create a course`
 // @Tags Instructor
 // @Param course formData CourseCreateSchema true "Course object"
 // @Param thumbnail formData file true "Thumbnail to upload"
@@ -68,18 +68,17 @@ func CreateCourse(db *ent.Client) fiber.Handler {
 		thumbnailUrl := config.UploadFile(thumbnail, string(config.FF_THUMBNAIL))
 		introVideoUrl := config.UploadFile(introVideo, string(config.FF_INTRO_VIDEOS))
 
-
 		course := instructorManager.CreateCourse(db, ctx, user, category, thumbnailUrl, &introVideoUrl, data)
 		response := courses.CourseResponseSchema{
 			ResponseSchema: base.ResponseMessage("Course Created Successfully"),
-			Data: courses.CourseDetailSchema{}.Assign(course),
+			Data:           courses.CourseDetailSchema{}.Assign(course),
 		}
 		return c.Status(200).JSON(response)
 	}
 }
 
 // @Summary Retrieve Instructor Course Details
-// @Description This endpoint retrieves the details of a particular course for the authenticated instructor
+// @Description `This endpoint retrieves the details of a particular course for the authenticated instructor`
 // @Tags Instructor
 // @Param slug path string true "Course Slug"
 // @Success 200 {object} courses.CourseResponseSchema
@@ -99,5 +98,88 @@ func GetInstructorCourseDetails(db *ent.Client) fiber.Handler {
 			Data:           courses.CourseDetailSchema{}.Assign(course),
 		}
 		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Update A Course
+// @Description `This endpoint allows an instructor to update a course`
+// @Tags Instructor
+// @Param slug path string true "Course Slug"
+// @Param course formData CourseCreateSchema true "Course object"
+// @Param thumbnail formData file false "Thumbnail to upload"
+// @Param intro_video formData file false "Intro video to upload"
+// @Success 200 {object} courses.CourseResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Router /instructor/courses/{slug} [put]
+// @Security BearerAuth
+func UpdateCourse(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), user, true)
+		if course == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Instructor has no course with that slug"))
+		}
+
+		data := CourseCreateSchema{}
+		if errCode, errData := config.ValidateFormRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+		category := courseManager.GetCategoryBySlug(db, ctx, data.CategorySlug)
+		if category == nil {
+			return config.APIError(c, 422, config.ValidationErr("categorySlug", "Invalid category slug"))
+		}
+
+		// Check and validate files
+		thumbnail, err := config.ValidateFile(c, "thumbnail", false)
+		if err != nil {
+			return c.Status(422).JSON(err)
+		}
+		introVideo, err := config.ValidateFile(c, "intro_video", false)
+		if err != nil {
+			return c.Status(422).JSON(err)
+		}
+		var (
+			thumbnailUrl  *string
+			introVideoUrl *string
+		)
+		if thumbnail != nil {
+			url := config.UploadFile(thumbnail, string(config.FF_THUMBNAIL))
+			thumbnailUrl = &url
+		}
+		if introVideo != nil {
+			url := config.UploadFile(introVideo, string(config.FF_INTRO_VIDEOS))
+			introVideoUrl = &url
+		}
+		updatedCourse := instructorManager.UpdateCourse(db, ctx, course, category, thumbnailUrl, introVideoUrl, data)
+		response := courses.CourseResponseSchema{
+			ResponseSchema: base.ResponseMessage("Course Updated Successfully"),
+			Data:           courses.CourseDetailSchema{}.Assign(updatedCourse),
+		}
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Delete A Course
+// @Description `This endpoint allows an authenticated instructor to delete a course`
+// @Tags Instructor
+// @Param slug path string true "Course Slug"
+// @Success 200 {object} courses.CourseResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Router /instructor/courses/{slug} [delete]
+// @Security BearerAuth
+func DeleteACourse(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), user, false)
+		if course == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Instructor has no course with that slug"))
+		}
+		err := instructorManager.DeleteCourse(db, ctx, course)
+		if err != nil {
+			return config.APIError(c, 403, config.RequestErr(config.ERR_NOT_ALLOWED, *err))
+		}
+		return c.Status(200).JSON(base.ResponseMessage("Course Deleted successfully"))
 	}
 }

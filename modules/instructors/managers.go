@@ -2,10 +2,12 @@ package instructors
 
 import (
 	"context"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/enrollment"
 )
 
 type InstructorManager struct{}
@@ -29,18 +31,43 @@ func (i InstructorManager) CreateCourse(db *ent.Client, ctx context.Context, ins
 	return course
 }
 
-func (i InstructorManager) UpdateCourse(db *ent.Client, ctx context.Context, course *ent.Course, category *ent.Category, thumbnailUrl string, introVideoUrl *string, data CourseCreateSchema) *ent.Course {
+func (i InstructorManager) UpdateCourse(db *ent.Client, ctx context.Context, course *ent.Course, category *ent.Category, thumbnailUrl *string, introVideoUrl *string, data CourseCreateSchema) *ent.Course {
 	slug := course.Slug
 	if data.Title != course.Title {
 		slug = i.GenerateCourseSlug(db, ctx, data.Title)
 	}
-	updatedCourse := course.Update().SetTitle(data.Title).SetSlug(slug).SetDesc(data.Desc).
+	updatedCourseQuery := course.Update().SetTitle(data.Title).SetSlug(slug).SetDesc(data.Desc).
 		SetCategoryID(category.ID).SetLanguage(data.Language).
 		SetDifficulty(data.Difficulty).SetDuration(data.Duration).SetIsFree(data.IsFree).
-		SetThumbnailURL(thumbnailUrl).SetNillableIntroVideoURL(introVideoUrl).
 		SetPrice(data.Price).SetDiscountPrice(data.DiscountPrice).SetEnrollmentType(data.EnrollmentType).
-		SetCertification(data.Certification).SaveX(ctx)
+		SetCertification(data.Certification)
+	if thumbnailUrl != nil {
+		updatedCourseQuery = updatedCourseQuery.SetThumbnailURL(*thumbnailUrl)
+	}
+	if introVideoUrl != nil {
+		updatedCourseQuery = updatedCourseQuery.SetIntroVideoURL(*introVideoUrl)
+	}
+	updatedCourse := updatedCourseQuery.SaveX(ctx)
+
+	// Edges reassignment to prevent reload
+	updatedCourse.Edges.Instructor = course.Edges.Instructor
+	updatedCourse.Edges.Category = category
+	updatedCourse.Edges.Reviews = course.Edges.Reviews
+	updatedCourse.Edges.Quizzes = course.Edges.Quizzes
+	updatedCourse.Edges.Enrollments = course.Edges.Enrollments
+	updatedCourse.Edges.Lessons = course.Edges.Lessons
 	return updatedCourse
+}
+
+func (i InstructorManager) DeleteCourse(db *ent.Client, ctx context.Context, courseObj *ent.Course) *string {
+	// Prevent deletion if there's a paid enrollment
+	enrollmentExists := db.Enrollment.Query().Where(enrollment.CourseIDEQ(courseObj.ID), enrollment.PaymentStatusEQ(enrollment.PaymentStatusSuccessful)).ExistX(ctx)
+	if enrollmentExists {
+		errMsg := "Cannot delete a course that has at least one paid enrollment"
+		return &errMsg
+	}
+	db.Course.DeleteOne(courseObj).ExecX(ctx)
+	return nil
 }
 
 func (i InstructorManager) GenerateCourseSlug(db *ent.Client, ctx context.Context, title string) string {

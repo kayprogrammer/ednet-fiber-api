@@ -1066,8 +1066,8 @@ paths:
       - HealthCheck
   /instructor/courses:
     get:
-      description: This endpoint retrieves paginated responses of the authenticated
-        instructor courses
+      description: '`This endpoint retrieves paginated responses of the authenticated
+        instructor courses`'
       parameters:
       - default: 1
         description: Current Page
@@ -1106,7 +1106,7 @@ paths:
       tags:
       - Instructor
     post:
-      description: This endpoint allows an instructor to create a course
+      description: '`This endpoint allows an instructor to create a course`'
       parameters:
       - in: formData
         name: category_slug
@@ -1114,7 +1114,6 @@ paths:
         type: string
       - in: formData
         name: certification
-        required: true
         type: boolean
       - in: formData
         maxLength: 10000
@@ -1160,9 +1159,9 @@ paths:
         - EnrollmentTypeInviteOnly
       - in: formData
         name: is_free
-        required: true
         type: boolean
-      - in: formData
+      - example: English
+        in: formData
         name: language
         required: true
         type: string
@@ -1197,9 +1196,32 @@ paths:
       tags:
       - Instructor
   /instructor/courses/{slug}:
+    delete:
+      description: '`This endpoint allows an authenticated instructor to delete a
+        course`'
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.CourseResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Delete A Course
+      tags:
+      - Instructor
     get:
-      description: This endpoint retrieves the details of a particular course for
-        the authenticated instructor
+      description: '`This endpoint retrieves the details of a particular course for
+        the authenticated instructor`'
       parameters:
       - description: Course Slug
         in: path
@@ -1218,6 +1240,103 @@ paths:
       security:
       - BearerAuth: []
       summary: Retrieve Instructor Course Details
+      tags:
+      - Instructor
+    put:
+      description: '`This endpoint allows an instructor to update a course`'
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - in: formData
+        name: category_slug
+        required: true
+        type: string
+      - in: formData
+        name: certification
+        type: boolean
+      - in: formData
+        maxLength: 10000
+        minLength: 10
+        name: desc
+        required: true
+        type: string
+      - enum:
+        - beginner
+        - beginner
+        - intermediate
+        - advanced
+        in: formData
+        name: difficulty
+        required: true
+        type: string
+        x-enum-varnames:
+        - DefaultDifficulty
+        - DifficultyBeginner
+        - DifficultyIntermediate
+        - DifficultyAdvanced
+      - in: formData
+        name: discount_price
+        required: true
+        type: number
+      - in: formData
+        name: duration
+        required: true
+        type: integer
+      - enum:
+        - open
+        - open
+        - restricted
+        - invite_only
+        in: formData
+        name: enrollment_type
+        required: true
+        type: string
+        x-enum-varnames:
+        - DefaultEnrollmentType
+        - EnrollmentTypeOpen
+        - EnrollmentTypeRestricted
+        - EnrollmentTypeInviteOnly
+      - in: formData
+        name: is_free
+        type: boolean
+      - example: English
+        in: formData
+        name: language
+        required: true
+        type: string
+      - in: formData
+        name: price
+        required: true
+        type: number
+      - in: formData
+        maxLength: 50
+        minLength: 10
+        name: title
+        required: true
+        type: string
+      - description: Thumbnail to upload
+        in: formData
+        name: thumbnail
+        type: file
+      - description: Intro video to upload
+        in: formData
+        name: intro_video
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.CourseResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Update A Course
       tags:
       - Instructor
   /profiles:
