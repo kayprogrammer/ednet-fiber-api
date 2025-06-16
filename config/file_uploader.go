@@ -51,7 +51,7 @@ func UploadFile(file *multipart.FileHeader, folder string) string {
 	return uploadResult.SecureURL
 }
 
-func ValidateFile(c *fiber.Ctx, name string, required bool) (*multipart.FileHeader, *ErrorResponse) {
+func ValidateFile(c *fiber.Ctx, name string, required bool, isVideo bool) (*multipart.FileHeader, *ErrorResponse) {
 	file, err := c.FormFile(name)
 	errData := ValidationErr(name, "Invalid file type")
 
@@ -78,9 +78,13 @@ func ValidateFile(c *fiber.Ctx, name string, required bool) (*multipart.FileHead
 
 		// Detect the content type
 		contentType := http.DetectContentType(buffer)
-		switch contentType {
-		case "image/jpeg", "image/png", "image/gif":
+		if isVideo && contentType == "video/mp4" {
 			return file, nil
+		} else {
+			switch contentType {
+			case "image/jpeg", "image/png", "image/gif":
+				return file, nil
+			}
 		}
 		return nil, &errData
 	}
@@ -93,4 +97,5 @@ const (
 	FF_AVATARS = "avatars"
 	FF_THUMBNAIL = "thumbnails"
 	FF_INTRO_VIDEOS = "intro_videos"
+	FF_LESSON_VIDEOS = "lesson_videos"
 )

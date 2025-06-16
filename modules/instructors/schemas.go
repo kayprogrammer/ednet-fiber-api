@@ -17,3 +17,13 @@ type CourseCreateSchema struct {
 	EnrollmentType course.EnrollmentType `form:"enrollment_type" validate:"required,enrollment_type_validator"`
 	Certification  bool                  `form:"certification"`
 }
+
+type LessonCreateSchema struct {
+	Title         string `form:"title" validate:"required,max=50,min=10"`
+	Desc          string `form:"desc" validate:"required,max=10000,min=10"`
+	Content       *string `form:"content" validate:"omitempty,max=10000,min=10"`
+	Duration      uint   `form:"duration" validate:"required"`
+	Order         uint   `form:"order" validate:"required"`
+	IsFreePreview bool   `form:"is_free_preview"`
+	IsPublished   bool   `form:"is_published"`
+}

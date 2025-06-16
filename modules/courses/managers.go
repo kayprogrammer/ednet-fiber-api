@@ -37,9 +37,9 @@ func (c CourseManager) GetCategoryBySlug(db *ent.Client, ctx context.Context, sl
 
 func (c CourseManager) ApplyCourseFilters(fibCtx *fiber.Ctx, query *ent.CourseQuery) *ent.CourseQuery {
 	filters := map[string]func(string){
-		"title": func(value string) { query.Where(course.TitleContains(value)) },
+		"title": func(value string) { query.Where(course.TitleContainsFold(value)) },
 		"instructor": func(value string) {
-			query.Where(course.HasInstructorWith(user.Or(user.NameContains(value), user.UsernameContains(value))))
+			query.Where(course.HasInstructorWith(user.Or(user.NameContainsFold(value), user.UsernameContainsFold(value))))
 		},
 		"isFree": func(value string) {
 			if freeStatus, err := strconv.ParseBool(value); err == nil {
@@ -147,7 +147,7 @@ func (c CourseManager) GetCourseBySlug(db *ent.Client, ctx context.Context, slug
 
 func (c CourseManager) ApplyLessonFilters(fibCtx *fiber.Ctx, query *ent.LessonQuery) *ent.LessonQuery {
 	filters := map[string]func(string){
-		"title": func(value string) { query.Where(lesson.TitleContains(value)) },
+		"title": func(value string) { query.Where(lesson.TitleContainsFold(value)) },
 		"isFreePreview": func(value string) {
 			if freeStatus, err := strconv.ParseBool(value); err == nil {
 				query.Where(lesson.IsFreePreviewEQ(freeStatus))

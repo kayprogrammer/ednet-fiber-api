@@ -97,7 +97,7 @@ func GetCourseLessonDetails(db *ent.Client) fiber.Handler {
 			return config.APIError(c, 404, config.NotFoundErr("Lesson Not Found for specified course"))
 		}
 		response := LessonResponseSchema{
-			ResponseSchema: base.ResponseMessage("Course Details Fetched Successfully"),
+			ResponseSchema: base.ResponseMessage("Lesson Details Fetched Successfully"),
 			Data:           LessonDetailSchema{}.Assign(lesson),
 		}
 		return c.Status(200).JSON(response)

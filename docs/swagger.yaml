@@ -1186,8 +1186,8 @@ paths:
         required: true
         type: file
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/courses.CourseResponseSchema'
       security:
@@ -1209,7 +1209,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/courses.CourseResponseSchema'
+            $ref: '#/definitions/base.ResponseSchema'
         "404":
           description: Not Found
           schema:
@@ -1337,6 +1337,219 @@ paths:
       security:
       - BearerAuth: []
       summary: Update A Course
+      tags:
+      - Instructor
+  /instructor/courses/{slug}/lessons:
+    get:
+      description: '`This endpoint retrieves the lessons of a particular course for
+        the authenticated instructor`'
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - default: 1
+        description: Current Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Page Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Filter By Title
+        in: query
+        name: title
+        type: string
+      - description: Filter By Free Preview
+        in: query
+        name: isFreePreview
+        type: boolean
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.LessonsResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Retrieve Course Lessons
+      tags:
+      - Instructor
+    post:
+      description: '`This endpoint creates a lesson of a particular course for the
+        authenticated instructor`'
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - in: formData
+        maxLength: 10000
+        minLength: 10
+        name: content
+        type: string
+      - in: formData
+        maxLength: 10000
+        minLength: 10
+        name: desc
+        required: true
+        type: string
+      - in: formData
+        name: duration
+        required: true
+        type: integer
+      - in: formData
+        name: is_free_preview
+        type: boolean
+      - in: formData
+        name: is_published
+        type: boolean
+      - in: formData
+        name: order
+        required: true
+        type: integer
+      - in: formData
+        maxLength: 50
+        minLength: 10
+        name: title
+        required: true
+        type: string
+      - description: Thumbnail to upload
+        in: formData
+        name: thumbnail
+        required: true
+        type: file
+      - description: Video to upload
+        in: formData
+        name: video
+        type: file
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/courses.LessonResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Create Course Lesson
+      tags:
+      - Instructor
+  /instructor/lessons/{slug}:
+    delete:
+      description: This endpoint deletes a particular lesson belonging to an instructor
+      parameters:
+      - description: Lesson Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.ResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Delete Instructor Lesson Details
+      tags:
+      - Instructor
+    get:
+      description: This endpoint retrieves the details of a particular lesson belonging
+        to an instructor
+      parameters:
+      - description: Lesson Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.LessonResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Retrieve Instructor Lesson Details
+      tags:
+      - Instructor
+    put:
+      description: '`This endpoint updates a lesson of a particular course for the
+        authenticated instructor`'
+      parameters:
+      - description: Lesson Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - in: formData
+        maxLength: 10000
+        minLength: 10
+        name: content
+        type: string
+      - in: formData
+        maxLength: 10000
+        minLength: 10
+        name: desc
+        required: true
+        type: string
+      - in: formData
+        name: duration
+        required: true
+        type: integer
+      - in: formData
+        name: is_free_preview
+        type: boolean
+      - in: formData
+        name: is_published
+        type: boolean
+      - in: formData
+        name: order
+        required: true
+        type: integer
+      - in: formData
+        maxLength: 50
+        minLength: 10
+        name: title
+        required: true
+        type: string
+      - description: Thumbnail to upload
+        in: formData
+        name: thumbnail
+        type: file
+      - description: Video to upload
+        in: formData
+        name: video
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.LessonResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Update Course Lesson
       tags:
       - Instructor
   /profiles:

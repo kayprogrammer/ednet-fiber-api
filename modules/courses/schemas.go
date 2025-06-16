@@ -75,7 +75,7 @@ type CoursesResponseSchema struct {
 }
 
 func (c CoursesResponseSchema) Assign(coursesData *config.PaginationResponse[*ent.Course]) CoursesResponseSchema {
-	items := c.Data.Items
+	items := make([]CourseListSchema, 0)
 	for _, course := range coursesData.Items {
 		items = append(items, CourseListSchema{}.Assign(course))
 	}
@@ -145,7 +145,7 @@ type LessonsResponseSchema struct {
 }
 
 func (l LessonsResponseSchema) Assign(lessonsData *config.PaginationResponse[*ent.Lesson]) LessonsResponseSchema {
-	items := l.Data.Items
+	items := make([]LessonListSchema, 0)
 	for _, lesson := range lessonsData.Items {
 		items = append(items, LessonListSchema{}.Assign(lesson))
 	}
@@ -204,9 +204,9 @@ type QuizDetailSchema struct {
 func (q QuizDetailSchema) Assign(quiz *ent.Quiz) QuizDetailSchema {
 	q.QuizListSchema = q.QuizListSchema.Assign(quiz)
 	questions := quiz.Edges.Questions
-	parsedQuestions := []QuestionSchema{}
+	parsedQuestions := make([]QuestionSchema, 0)
 	for _, question := range questions {
-		parsedOptions := []QuestionOptionSchema{}
+		parsedOptions := make([]QuestionOptionSchema, 0)
 		for _, option := range question.Edges.Options {
 			parsedOptions = append(parsedOptions, QuestionOptionSchema{Text: option.Text, IsCorrect: option.IsCorrect})
 		}

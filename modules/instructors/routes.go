@@ -40,7 +40,7 @@ func GetInstructorCourses(db *ent.Client) fiber.Handler {
 // @Param course formData CourseCreateSchema true "Course object"
 // @Param thumbnail formData file true "Thumbnail to upload"
 // @Param intro_video formData file true "Intro video to upload"
-// @Success 200 {object} courses.CourseResponseSchema
+// @Success 201 {object} courses.CourseResponseSchema
 // @Router /instructor/courses [post]
 // @Security BearerAuth
 func CreateCourse(db *ent.Client) fiber.Handler {
@@ -57,11 +57,11 @@ func CreateCourse(db *ent.Client) fiber.Handler {
 		}
 
 		// Check and validate files
-		thumbnail, err := config.ValidateFile(c, "thumbnail", true)
+		thumbnail, err := config.ValidateFile(c, "thumbnail", true, false)
 		if err != nil {
 			return c.Status(422).JSON(err)
 		}
-		introVideo, err := config.ValidateFile(c, "intro_video", true)
+		introVideo, err := config.ValidateFile(c, "intro_video", true, true)
 		if err != nil {
 			return c.Status(422).JSON(err)
 		}
@@ -73,7 +73,7 @@ func CreateCourse(db *ent.Client) fiber.Handler {
 			ResponseSchema: base.ResponseMessage("Course Created Successfully"),
 			Data:           courses.CourseDetailSchema{}.Assign(course),
 		}
-		return c.Status(200).JSON(response)
+		return c.Status(201).JSON(response)
 	}
 }
 
@@ -131,11 +131,11 @@ func UpdateCourse(db *ent.Client) fiber.Handler {
 		}
 
 		// Check and validate files
-		thumbnail, err := config.ValidateFile(c, "thumbnail", false)
+		thumbnail, err := config.ValidateFile(c, "thumbnail", false, false)
 		if err != nil {
 			return c.Status(422).JSON(err)
 		}
-		introVideo, err := config.ValidateFile(c, "intro_video", false)
+		introVideo, err := config.ValidateFile(c, "intro_video", false, true)
 		if err != nil {
 			return c.Status(422).JSON(err)
 		}
@@ -164,7 +164,7 @@ func UpdateCourse(db *ent.Client) fiber.Handler {
 // @Description `This endpoint allows an authenticated instructor to delete a course`
 // @Tags Instructor
 // @Param slug path string true "Course Slug"
-// @Success 200 {object} courses.CourseResponseSchema
+// @Success 200 {object} base.ResponseSchema
 // @Success 404 {object} base.NotFoundErrorExample
 // @Router /instructor/courses/{slug} [delete]
 // @Security BearerAuth
@@ -181,5 +181,186 @@ func DeleteACourse(db *ent.Client) fiber.Handler {
 			return config.APIError(c, 403, config.RequestErr(config.ERR_NOT_ALLOWED, *err))
 		}
 		return c.Status(200).JSON(base.ResponseMessage("Course Deleted successfully"))
+	}
+}
+
+// @Summary Retrieve Course Lessons
+// @Description `This endpoint retrieves the lessons of a particular course for the authenticated instructor`
+// @Tags Instructor
+// @Param slug path string true "Course Slug"
+// @Success 200 {object} courses.LessonsResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Param page query int false "Current Page" default(1)
+// @Param limit query int false "Page Limit" default(100)
+// @Param title query string false "Filter By Title"
+// @Param isFreePreview query bool false "Filter By Free Preview"
+// @Router /instructor/courses/{slug}/lessons [get]
+// @Security BearerAuth
+func GetInstructorCourseLessons(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), user, true)
+		if course == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Instructor has no course with that slug"))
+		}
+		lessons := courseManager.GetLessons(db, course, c)
+
+		response := courses.LessonsResponseSchema{
+			ResponseSchema: base.ResponseMessage("Lessons Fetched Successfully"),
+		}.Assign(lessons)
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Create Course Lesson
+// @Description `This endpoint creates a lesson of a particular course for the authenticated instructor`
+// @Tags Instructor
+// @Param slug path string true "Course Slug"
+// @Param lesson formData LessonCreateSchema true "Lesson object"
+// @Param thumbnail formData file true "Thumbnail to upload"
+// @Param video formData file false "Video to upload"
+// @Success 201 {object} courses.LessonResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Router /instructor/courses/{slug}/lessons [post]
+// @Security BearerAuth
+func CreateInstructorCourseLesson(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), user, true)
+		if course == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Instructor has no course with that slug"))
+		}
+
+		data := LessonCreateSchema{}
+		if errCode, errData := config.ValidateFormRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+		// Check and validate files
+		thumbnail, err := config.ValidateFile(c, "thumbnail", true, false)
+		if err != nil {
+			return c.Status(422).JSON(err)
+		}
+		video, err := config.ValidateFile(c, "video", false, true)
+		if err != nil {
+			return c.Status(422).JSON(err)
+		}
+		thumbnailUrl := config.UploadFile(thumbnail, string(config.FF_THUMBNAIL))
+		var videoUrl *string
+		if video != nil {
+			url := config.UploadFile(video, string(config.FF_LESSON_VIDEOS))
+			videoUrl = &url
+		}
+
+		lesson := instructorManager.CreateLesson(db, ctx, course, thumbnailUrl, videoUrl, data)
+
+		response := courses.LessonResponseSchema{
+			ResponseSchema: base.ResponseMessage("Lesson Created Successfully"),
+			Data: courses.LessonDetailSchema{}.Assign(lesson),
+		}
+		return c.Status(201).JSON(response)
+	}
+}
+
+// @Summary Retrieve Instructor Lesson Details
+// @Description This endpoint retrieves the details of a particular lesson belonging to an instructor
+// @Tags Instructor
+// @Param slug path string true "Lesson Slug"
+// @Success 200 {object} courses.LessonResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Router /instructor/lessons/{slug} [get]
+// @Security BearerAuth
+func GetInstructorCourseLessonDetails(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		lesson := instructorManager.GetCourseLessonBySlug(db, ctx, user, c.Params("slug"), true)
+		if lesson == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Instructor lesson not found"))
+		}
+		response := courses.LessonResponseSchema{
+			ResponseSchema: base.ResponseMessage("Lesson Details Fetched Successfully"),
+			Data:           courses.LessonDetailSchema{}.Assign(lesson),
+		}
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Update Course Lesson
+// @Description `This endpoint updates a lesson of a particular course for the authenticated instructor`
+// @Tags Instructor
+// @Param slug path string true "Lesson Slug"
+// @Param lesson formData LessonCreateSchema true "Lesson object"
+// @Param thumbnail formData file false "Thumbnail to upload"
+// @Param video formData file false "Video to upload"
+// @Success 200 {object} courses.LessonResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Router /instructor/lessons/{slug} [put]
+// @Security BearerAuth
+func UpdateCourseLesson(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		lesson := instructorManager.GetCourseLessonBySlug(db, ctx, user, c.Params("slug"), false)
+		if lesson == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Instructor lesson not found"))
+		}
+
+		data := LessonCreateSchema{}
+		if errCode, errData := config.ValidateFormRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+		// Check and validate files
+		thumbnail, err := config.ValidateFile(c, "thumbnail", false, false)
+		if err != nil {
+			return c.Status(422).JSON(err)
+		}
+		video, err := config.ValidateFile(c, "video", false, true)
+		if err != nil {
+			return c.Status(422).JSON(err)
+		}
+		var thumbnailUrl *string
+		if thumbnail != nil {
+			url := config.UploadFile(thumbnail, string(config.FF_THUMBNAIL))
+			thumbnailUrl = &url
+		}
+		var videoUrl *string
+		if video != nil {
+			url := config.UploadFile(video, string(config.FF_LESSON_VIDEOS))
+			videoUrl = &url
+		}
+
+		lesson = instructorManager.UpdateLesson(db, ctx, lesson, thumbnailUrl, videoUrl, data)
+
+		response := courses.LessonResponseSchema{
+			ResponseSchema: base.ResponseMessage("Lesson Updated Successfully"),
+			Data: courses.LessonDetailSchema{}.Assign(lesson),
+		}
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Delete Instructor Lesson Details
+// @Description This endpoint deletes a particular lesson belonging to an instructor
+// @Tags Instructor
+// @Param slug path string true "Lesson Slug"
+// @Success 200 {object} base.ResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Router /instructor/lessons/{slug} [delete]
+// @Security BearerAuth
+func DeleteCourseLesson(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		lesson := instructorManager.GetCourseLessonBySlug(db, ctx, user, c.Params("slug"), false)
+		if lesson == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Instructor lesson not found"))
+		}
+		err := instructorManager.DeleteLesson(db, ctx, lesson)
+		if err != nil {
+			return config.APIError(c, 403, config.RequestErr(config.ERR_NOT_ALLOWED, *err))
+		}
+		return c.Status(200).JSON(base.ResponseMessage("Lesson deleted successfully"))
 	}
 }

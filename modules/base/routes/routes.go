@@ -57,6 +57,12 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 	instructorsRouter.Get("/courses/:slug", instructors.GetInstructorCourseDetails(db))
 	instructorsRouter.Put("/courses/:slug", instructors.UpdateCourse(db))
 	instructorsRouter.Delete("/courses/:slug", instructors.DeleteACourse(db))
+	instructorsRouter.Get("/courses/:slug/lessons", instructors.GetInstructorCourseLessons(db))
+	instructorsRouter.Post("/courses/:slug/lessons", instructors.CreateInstructorCourseLesson(db))
+
+	instructorsRouter.Get("/lessons/:slug", instructors.GetInstructorCourseLessonDetails(db))
+	instructorsRouter.Put("/lessons/:slug", instructors.UpdateCourseLesson(db))
+	instructorsRouter.Delete("/lessons/:slug", instructors.DeleteCourseLesson(db))
 }
 
 type HealthCheckSchema struct {
