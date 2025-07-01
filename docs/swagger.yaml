@@ -212,6 +212,21 @@ definitions:
       total_pages:
         type: integer
     type: object
+  config.PaginationResponse-courses_QuizListSchema:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/courses.QuizListSchema'
+        type: array
+      items_count:
+        type: integer
+      limit:
+        type: integer
+      page:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   course.Difficulty:
     enum:
     - beginner
@@ -480,6 +495,84 @@ definitions:
         example: success
         type: string
     type: object
+  courses.QuestionOptionSchema:
+    properties:
+      is_correct:
+        type: boolean
+      text:
+        type: string
+    type: object
+  courses.QuestionSchema:
+    properties:
+      options:
+        items:
+          $ref: '#/definitions/courses.QuestionOptionSchema'
+        type: array
+      order:
+        type: integer
+      text:
+        type: string
+    type: object
+  courses.QuizDetailSchema:
+    properties:
+      description:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: string
+      is_published:
+        type: boolean
+      questions:
+        items:
+          $ref: '#/definitions/courses.QuestionSchema'
+        type: array
+      slug:
+        type: string
+      title:
+        type: string
+      total_questions:
+        type: integer
+    type: object
+  courses.QuizListSchema:
+    properties:
+      description:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: string
+      is_published:
+        type: boolean
+      slug:
+        type: string
+      title:
+        type: string
+      total_questions:
+        type: integer
+    type: object
+  courses.QuizResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/courses.QuizDetailSchema'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  courses.QuizzesResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/config.PaginationResponse-courses_QuizListSchema'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
   enrollment.PaymentStatus:
     enum:
     - pending
@@ -545,6 +638,31 @@ definitions:
       wh:
         example: https://wa.me/2348133831036
         type: string
+    type: object
+  instructors.QuizCreateSchema:
+    properties:
+      description:
+        maxLength: 10000
+        minLength: 10
+        type: string
+      duration:
+        type: integer
+      is_published:
+        type: boolean
+      questions:
+        items:
+          $ref: '#/definitions/courses.QuestionSchema'
+        minItems: 1
+        type: array
+      title:
+        maxLength: 255
+        minLength: 10
+        type: string
+    required:
+    - description
+    - duration
+    - questions
+    - title
     type: object
   profiles.ProfileResponseSchema:
     properties:
@@ -945,6 +1063,34 @@ paths:
       summary: Retrieve Lesson Details
       tags:
       - Courses
+  /courses/{course_slug}/quizzes/{quiz_slug}:
+    get:
+      description: This endpoint retrieves the details of a particular quiz
+      parameters:
+      - description: Course Slug
+        in: path
+        name: course_slug
+        required: true
+        type: string
+      - description: Quiz Slug
+        in: path
+        name: quiz_slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.QuizResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Retrieve Quiz Details
+      tags:
+      - Courses
   /courses/{slug}:
     get:
       description: This endpoint retrieves the details of a particular course
@@ -1040,6 +1186,43 @@ paths:
           schema:
             $ref: '#/definitions/base.NotFoundErrorExample'
       summary: Retrieve Course Lessons
+      tags:
+      - Courses
+  /courses/{slug}/quizzes:
+    get:
+      description: This endpoint retrieves paginated responses of a course quizzes
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - default: 1
+        description: Current Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Page Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Filter By Title
+        in: query
+        name: title
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.QuizzesResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Retrieve Course Quizzes
       tags:
       - Courses
   /general/site-detail:
@@ -1444,6 +1627,77 @@ paths:
       summary: Create Course Lesson
       tags:
       - Instructor
+  /instructor/courses/{slug}/quizzes:
+    get:
+      description: '`This endpoint retrieves the quizzes of a particular course for
+        the authenticated instructor`'
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - default: 1
+        description: Current Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Page Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Filter By Title
+        in: query
+        name: title
+        type: string
+      - description: Filter By Published Status
+        in: query
+        name: isPublished
+        type: boolean
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.QuizzesResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Retrieve Course Quizzes
+      tags:
+      - Instructor
+    post:
+      description: '`This endpoint creates a quiz of a particular course for the authenticated
+        instructor`'
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Quiz object
+        in: body
+        name: quiz
+        required: true
+        schema:
+          $ref: '#/definitions/instructors.QuizCreateSchema'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/courses.QuizResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Create Course Quiz
+      tags:
+      - Instructor
   /instructor/lessons/{slug}:
     delete:
       description: This endpoint deletes a particular lesson belonging to an instructor
@@ -1550,6 +1804,81 @@ paths:
       security:
       - BearerAuth: []
       summary: Update Course Lesson
+      tags:
+      - Instructor
+  /instructor/quizzes/{slug}:
+    delete:
+      description: This endpoint deletes a particular quiz belonging to an instructor
+      parameters:
+      - description: Quiz Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.ResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Delete Instructor Quiz
+      tags:
+      - Instructor
+    get:
+      description: This endpoint retrieves the details of a particular quiz belonging
+        to an instructor
+      parameters:
+      - description: Quiz Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.QuizResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Retrieve Instructor Quiz Details
+      tags:
+      - Instructor
+    put:
+      description: '`This endpoint updates a quiz of a particular course for the authenticated
+        instructor`'
+      parameters:
+      - description: Quiz Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Quiz object
+        in: body
+        name: quiz
+        required: true
+        schema:
+          $ref: '#/definitions/instructors.QuizCreateSchema'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.QuizResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Update Course Quiz
       tags:
       - Instructor
   /profiles:

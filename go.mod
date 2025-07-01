@@ -16,6 +16,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/spf13/viper v1.19.0
+	github.com/stripe/stripe-go/v82 v82.2.0
 	github.com/swaggo/swag v1.16.4
 	golang.org/x/crypto v0.36.0
 	google.golang.org/api v0.171.0
@@ -75,7 +76,6 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stripe/stripe-go/v82 v82.2.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect

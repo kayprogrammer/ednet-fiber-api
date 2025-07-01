@@ -197,8 +197,8 @@ func (Quiz) Fields() []ent.Field {
 	return append(
 		CommonFields,
 		field.UUID("course_id", uuid.UUID{}),
-		field.String("slug").Unique(),
 		field.String("title").NotEmpty(),
+		field.String("slug").Unique(),
 		field.Text("description").Optional(),
 		field.Int("duration").Default(0), // in minutes
 		field.Bool("is_published").Default(false),

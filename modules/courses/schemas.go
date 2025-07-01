@@ -3,6 +3,7 @@ package courses
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
@@ -176,18 +177,44 @@ type LessonResponseSchema struct {
 	Data LessonDetailSchema `json:"data"`
 }
 
+type QuizzesResponseSchema struct {
+	base.ResponseSchema
+	Data config.PaginationResponse[QuizListSchema] `json:"data"`
+}
+
+func (q QuizzesResponseSchema) Assign(quizzesData *config.PaginationResponse[*ent.Quiz]) QuizzesResponseSchema {
+	items := make([]QuizListSchema, 0)
+	for _, quiz := range quizzesData.Items {
+		items = append(items, QuizListSchema{}.Assign(quiz))
+	}
+	q.Data.Items = items
+	q.Data.ItemsCount = quizzesData.ItemsCount
+	q.Data.Page = quizzesData.Page
+	q.Data.TotalPages = quizzesData.TotalPages
+	q.Data.Limit = quizzesData.Limit
+	return q
+}
+
+type QuizResponseSchema struct {
+	base.ResponseSchema
+	Data QuizDetailSchema `json:"data"`
+}
+
 type QuizListSchema struct {
-	ID             string `json:"id"`
-	Title          string `json:"title"`
-	Description    string `json:"description"`
-	TotalQuestions int    `json:"total_questions"`
-	Duration       int    `json:"duration"`
-	IsPublished    bool   `json:"is_published"`
+	ID             uuid.UUID `json:"id"`
+	Title          string    `json:"title"`
+	Slug           string    `json:"slug"`
+	Description    string    `json:"description"`
+	TotalQuestions int       `json:"total_questions"`
+	Duration       int       `json:"duration"`
+	IsPublished    bool      `json:"is_published"`
 }
 
 // Assign values from Quix to QuizListSchema
 func (q QuizListSchema) Assign(quiz *ent.Quiz) QuizListSchema {
+	q.ID = quiz.ID
 	q.Title = quiz.Title
+	q.Slug = quiz.Slug
 	q.Description = quiz.Description
 	q.TotalQuestions = len(quiz.Edges.Questions)
 	q.Duration = quiz.Duration

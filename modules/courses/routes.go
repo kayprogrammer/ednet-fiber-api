@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/enrollment"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/base"
 )
 
@@ -141,6 +142,72 @@ func EnrollForACourse(db *ent.Client, cfg config.Config) fiber.Handler {
 		response := EnrollmentResponseSchema{
 			ResponseSchema: base.ResponseMessage("Enrollment Created Successfully"),
 			Data:           EnrollmentSchema{}.Assign(enrollment),
+		}
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Retrieve Course Quizzes
+// @Description This endpoint retrieves paginated responses of a course quizzes
+// @Tags Courses
+// @Param slug path string true "Course Slug"
+// @Param page query int false "Current Page" default(1)
+// @Param limit query int false "Page Limit" default(100)
+// @Param title query string false "Filter By Title"
+// @Success 404 {object} base.NotFoundErrorExample
+// @Success 200 {object} QuizzesResponseSchema
+// @Router /courses/{slug}/quizzes [get]
+// @Security BearerAuth
+func GetCourseQuizzes(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), nil, false)
+		if course == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Course Not Found"))
+		}
+		// Check if user is enrolled for this course
+		enrollmentObj := courseManager.GetExistentEnrollmentByUserAndCourse(db, ctx, user, course, false)
+		if enrollmentObj == nil || enrollmentObj.PaymentStatus != enrollment.PaymentStatusSuccessful {
+			return config.APIError(c, 403, config.ForbiddenErr("Only for enrolled users"))
+		}
+		quizzes := courseManager.GetQuizzes(db, course, c)
+
+		response := QuizzesResponseSchema{
+			ResponseSchema: base.ResponseMessage("Quizzes Fetched Successfully"),
+		}.Assign(quizzes)
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Retrieve Quiz Details
+// @Description This endpoint retrieves the details of a particular quiz
+// @Tags Courses
+// @Param course_slug path string true "Course Slug"
+// @Param quiz_slug path string true "Quiz Slug"
+// @Success 200 {object} QuizResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Router /courses/{course_slug}/quizzes/{quiz_slug} [get]
+// @Security BearerAuth
+func GetCourseQuizDetails(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		quiz := courseManager.GetQuizBySlug(db, ctx, c.Params("quiz_slug"), true)
+		if quiz == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Quiz Not Found"))
+		}
+		if quiz.Edges.Course.Slug != c.Params("course_slug") {
+			return config.APIError(c, 404, config.NotFoundErr("Quiz Not Found for specified course"))
+		}
+		// Check if user is enrolled for this course
+		enrollmentObj := courseManager.GetExistentEnrollmentByUserAndCourse(db, ctx, user, quiz.Edges.Course, false)
+		if enrollmentObj == nil || enrollmentObj.PaymentStatus != enrollment.PaymentStatusSuccessful {
+			return config.APIError(c, 403, config.ForbiddenErr("Only for enrolled users"))
+		}
+		response := QuizResponseSchema{
+			ResponseSchema: base.ResponseMessage("Quiz Details Fetched Successfully"),
+			Data:           QuizDetailSchema{}.Assign(quiz),
 		}
 		return c.Status(200).JSON(response)
 	}

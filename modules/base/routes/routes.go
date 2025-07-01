@@ -49,6 +49,8 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 	coursesRouter.Get("/:slug/lessons", courses.GetCourseLessons(db))
 	coursesRouter.Get("/:course_slug/lessons/:lesson_slug", courses.GetCourseLessonDetails(db))
 	coursesRouter.Post("/:slug/enroll", accounts.AuthMiddleware(db), courses.EnrollForACourse(db, cfg))
+	coursesRouter.Get("/:slug/quizzes", accounts.AuthMiddleware(db), courses.GetCourseQuizzes(db))
+	coursesRouter.Get("/:course_slug/quizzes/:quiz_slug", accounts.AuthMiddleware(db), courses.GetCourseQuizDetails(db))
 
 	// Instructor Routes (2)
 	instructorsRouter := api.Group("/instructor", accounts.AuthMiddleware(db, user.RoleInstructor))
@@ -63,7 +65,14 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 	instructorsRouter.Get("/lessons/:slug", instructors.GetInstructorCourseLessonDetails(db))
 	instructorsRouter.Put("/lessons/:slug", instructors.UpdateCourseLesson(db))
 	instructorsRouter.Delete("/lessons/:slug", instructors.DeleteCourseLesson(db))
+
+	instructorsRouter.Get("/courses/:slug/quizzes", instructors.GetInstructorCourseQuizzes(db))
+	instructorsRouter.Post("/courses/:slug/quizzes", instructors.CreateInstructorCourseQuiz(db))
+	instructorsRouter.Get("/quizzes/:slug", instructors.GetInstructorCourseQuizDetails(db))
+	instructorsRouter.Put("/quizzes/:slug", instructors.UpdateCourseQuiz(db))
+	instructorsRouter.Delete("/quizzes/:slug", instructors.DeleteCourseQuiz(db))
 }
+
 
 type HealthCheckSchema struct {
 	Success string `json:"success" example:"pong"`

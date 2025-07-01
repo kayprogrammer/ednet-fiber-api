@@ -2,6 +2,7 @@ package instructors
 
 import (
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
+	"github.com/kayprogrammer/ednet-fiber-api/modules/courses"
 )
 
 type CourseCreateSchema struct {
@@ -26,4 +27,12 @@ type LessonCreateSchema struct {
 	Order         uint   `form:"order" validate:"required"`
 	IsFreePreview bool   `form:"is_free_preview"`
 	IsPublished   bool   `form:"is_published"`
+}
+
+type QuizCreateSchema struct {
+	Title       string                   `json:"title" validate:"required,max=255,min=10"`
+	Description string                   `json:"description" validate:"required,max=10000,min=10"`
+	Duration    int                      `json:"duration" validate:"required"`
+	IsPublished bool                     `json:"is_published"`
+	Questions   []courses.QuestionSchema `json:"questions" validate:"required,min=1,dive"`
 }

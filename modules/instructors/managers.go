@@ -9,6 +9,9 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/enrollment"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/lesson"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/question"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/questionoption"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/quiz"
 )
 
 type InstructorManager struct{}
@@ -165,5 +168,114 @@ func (i InstructorManager) DeleteLesson(db *ent.Client, ctx context.Context, les
 		return &errMsg
 	}
 	db.Lesson.DeleteOne(lessonObj).ExecX(ctx)
+	return nil
+}
+
+func (i InstructorManager) GenerateQuizSlug(db *ent.Client, ctx context.Context, title string) string {
+	baseSlug := config.Slugify(title)
+	uniqueSlug := baseSlug
+	for {
+		exists, _ := db.Quiz.Query().Where(quiz.SlugEQ(uniqueSlug)).Exist(ctx)
+		if !exists {
+			break
+		}
+		uniqueSlug = baseSlug + "-" + config.GetRandomString(7)
+	}
+	return uniqueSlug
+}
+
+func (i InstructorManager) GetCourseQuizBySlug(db *ent.Client, ctx context.Context, instructor *ent.User, slug string, loaded bool) *ent.Quiz {
+	query := db.Quiz.Query().
+		Where(
+			quiz.SlugEQ(slug),
+			quiz.HasCourseWith(course.InstructorIDEQ(instructor.ID)),
+		)
+	if loaded {
+		query = query.
+			WithCourse().
+			WithQuestions(
+				func(q *ent.QuestionQuery) {
+					q.WithOptions()
+				},
+			)
+	}
+	quizObj, _ := query.Only(ctx)
+	return quizObj
+}
+
+func (i InstructorManager) CreateQuiz(db *ent.Client, ctx context.Context, course *ent.Course, data QuizCreateSchema) *ent.Quiz {
+	slug := i.GenerateQuizSlug(db, ctx, data.Title)
+	quizObj := db.Quiz.Create().SetTitle(data.Title).SetSlug(slug).SetDescription(data.Description).
+		SetCourse(course).SetDuration(data.Duration).SetIsPublished(data.IsPublished).
+		SaveX(ctx)
+
+	// Create questions and options in bulk
+	questionsToCreate := make([]*ent.QuestionCreate, len(data.Questions))
+	for i, questionData := range data.Questions {
+		questionsToCreate[i] = db.Question.Create().SetText(questionData.Text).SetOrder(questionData.Order).SetQuiz(quizObj)
+	}
+	questions := db.Question.CreateBulk(questionsToCreate...).SaveX(ctx)
+
+	optionsToCreate := make([]*ent.QuestionOptionCreate, 0)
+	for i, questionData := range data.Questions {
+		for _, optionData := range questionData.Options {
+			optionsToCreate = append(optionsToCreate, db.QuestionOption.Create().SetText(optionData.Text).SetIsCorrect(optionData.IsCorrect).SetQuestion(questions[i]))
+		}
+	}
+	db.QuestionOption.CreateBulk(optionsToCreate...).SaveX(ctx)
+
+	return i.GetCourseQuizBySlug(db, ctx, course.Edges.Instructor, slug, true)
+}
+
+func (i InstructorManager) UpdateQuiz(db *ent.Client, ctx context.Context, quiz *ent.Quiz, instructor *ent.User, data QuizCreateSchema) *ent.Quiz {
+	slug := quiz.Slug
+	if data.Title != quiz.Title {
+		slug = i.GenerateQuizSlug(db, ctx, data.Title)
+	}
+	updatedQuiz := quiz.Update().SetTitle(data.Title).SetSlug(slug).SetDescription(data.Description).
+		SetDuration(data.Duration).SetIsPublished(data.IsPublished).
+		SaveX(ctx)
+
+	// Delete existing questions and options
+	questionIDs, err := quiz.QueryQuestions().IDs(ctx)
+	if err == nil && len(questionIDs) > 0 {
+		db.QuestionOption.Delete().Where(questionoption.HasQuestionWith(question.IDIn(questionIDs...))).ExecX(ctx)
+		db.Question.Delete().Where(question.IDIn(questionIDs...)).ExecX(ctx)
+	}
+
+	// Create new questions and options in bulk
+	questionsToCreate := make([]*ent.QuestionCreate, len(data.Questions))
+	for i, questionData := range data.Questions {
+		questionsToCreate[i] = db.Question.Create().SetText(questionData.Text).SetOrder(questionData.Order).SetQuiz(updatedQuiz)
+	}
+	questions := db.Question.CreateBulk(questionsToCreate...).SaveX(ctx)
+
+	optionsToCreate := make([]*ent.QuestionOptionCreate, 0)
+	for i, questionData := range data.Questions {
+		for _, optionData := range questionData.Options {
+			optionsToCreate = append(optionsToCreate, db.QuestionOption.Create().SetText(optionData.Text).SetIsCorrect(optionData.IsCorrect).SetQuestion(questions[i]))
+		}
+	}
+	db.QuestionOption.CreateBulk(optionsToCreate...).SaveX(ctx)
+
+	return i.GetCourseQuizBySlug(db, ctx, instructor, slug, true)
+}
+
+func (i InstructorManager) DeleteQuiz(db *ent.Client, ctx context.Context, quizObj *ent.Quiz) *string {
+	// Prevent deletion if there's a paid enrollment for a published quiz
+	enrollmentExists := db.Enrollment.Query().Where(enrollment.CourseIDEQ(quizObj.CourseID), enrollment.PaymentStatusEQ(enrollment.PaymentStatusSuccessful)).ExistX(ctx)
+	if enrollmentExists && quizObj.IsPublished {
+		errMsg := "Cannot delete a published quiz which has at least one paid enrollment"
+		return &errMsg
+	}
+
+	// Delete existing questions and options
+	questionIDs, err := quizObj.QueryQuestions().IDs(ctx)
+	if err == nil && len(questionIDs) > 0 {
+		db.QuestionOption.Delete().Where(questionoption.HasQuestionWith(question.IDIn(questionIDs...))).ExecX(ctx)
+		db.Question.Delete().Where(question.IDIn(questionIDs...)).ExecX(ctx)
+	}
+
+	db.Quiz.DeleteOne(quizObj).ExecX(ctx)
 	return nil
 }

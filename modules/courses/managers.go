@@ -14,6 +14,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/enrollment"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/lesson"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/quiz"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/review"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 )
@@ -168,6 +169,47 @@ func (c CourseManager) GetLessons(db *ent.Client, course *ent.Course, fibCtx *fi
 	query = c.ApplyLessonFilters(fibCtx, query)
 	lessons := config.PaginateModel(fibCtx, query)
 	return lessons
+}
+
+func (c CourseManager) ApplyQuizFilters(fibCtx *fiber.Ctx, query *ent.QuizQuery) *ent.QuizQuery {
+	filters := map[string]func(string){
+		"title": func(value string) { query.Where(quiz.TitleContainsFold(value)) },
+		"isPublished": func(value string) {
+			if publishedStatus, err := strconv.ParseBool(value); err == nil {
+				query.Where(quiz.IsPublishedEQ(publishedStatus))
+			}
+		},
+	}
+	// Apply filters dynamically
+	for param, apply := range filters {
+		if value := fibCtx.Query(param); value != "" {
+			apply(value)
+		}
+	}
+	return query
+}
+
+func (c CourseManager) GetQuizzes(db *ent.Client, course *ent.Course, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Quiz] {
+	query := db.Quiz.Query().Where(quiz.CourseID(course.ID)).Order(ent.Asc(quiz.FieldTitle)).WithQuestions()
+	query = c.ApplyQuizFilters(fibCtx, query)
+	quizzes := config.PaginateModel(fibCtx, query)
+	return quizzes
+}
+
+func (c CourseManager) GetQuizBySlug(db *ent.Client, ctx context.Context, slug string, loaded bool) *ent.Quiz {
+	query := db.Quiz.Query().
+		Where(quiz.SlugEQ(slug))
+	if loaded {
+		query = query.
+			WithCourse().
+			WithQuestions(
+				func(q *ent.QuestionQuery) {
+					q.WithOptions()
+				},
+			)
+	}
+	quiz, _ := query.Only(ctx)
+	return quiz
 }
 
 func (c CourseManager) GetCourseLessonBySlug(db *ent.Client, ctx context.Context, slug string, loaded bool) *ent.Lesson {

@@ -39,6 +39,7 @@ var ERR_PASSWORD_MISMATCH = "password_does_not_match"
 var ERR_PASSWORD_SAME = "same_password"
 var ERR_NOT_FOUND = "not_found"
 var ERR_LIMITS_REACHED = "limits_reached"
+var ERR_FORBIDDEN = "forbidden"
 
 func RequestErr(code string, message string, opts ...map[string]string) ErrorResponse {
 	var data *map[string]string
@@ -60,6 +61,10 @@ func InvalidParamErr(message string) ErrorResponse {
 
 func RateLimitError(message string) ErrorResponse {
 	return RequestErr(ERR_LIMITS_REACHED, message)
+}
+
+func ForbiddenErr(message string) ErrorResponse {
+	return RequestErr(ERR_FORBIDDEN, message)
 }
 
 func ValidationErr(field string, message string) ErrorResponse {
