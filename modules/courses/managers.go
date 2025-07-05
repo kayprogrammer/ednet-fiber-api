@@ -138,7 +138,6 @@ func (c CourseManager) GetCourseBySlug(db *ent.Client, ctx context.Context, slug
 			WithInstructor().
 			WithCategory().
 			WithTags().
-			WithQuizzes().
 			WithEnrollments().
 			WithReviews()
 	}
@@ -189,19 +188,27 @@ func (c CourseManager) ApplyQuizFilters(fibCtx *fiber.Ctx, query *ent.QuizQuery)
 	return query
 }
 
-func (c CourseManager) GetQuizzes(db *ent.Client, course *ent.Course, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Quiz] {
-	query := db.Quiz.Query().Where(quiz.CourseID(course.ID)).Order(ent.Asc(quiz.FieldTitle)).WithQuestions()
+func (c CourseManager) GetQuizzes(db *ent.Client, lesson *ent.Lesson, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Quiz] {
+	query := db.Quiz.Query().Where(quiz.LessonID(lesson.ID)).Order(ent.Asc(quiz.FieldTitle)).WithQuestions()
 	query = c.ApplyQuizFilters(fibCtx, query)
 	quizzes := config.PaginateModel(fibCtx, query)
 	return quizzes
 }
 
-func (c CourseManager) GetQuizBySlug(db *ent.Client, ctx context.Context, slug string, loaded bool) *ent.Quiz {
+func (c CourseManager) GetQuizBySlug(db *ent.Client, ctx context.Context, slug string, instructor *ent.User, loaded bool) *ent.Quiz {
 	query := db.Quiz.Query().
 		Where(quiz.SlugEQ(slug))
+	
+	if instructor != nil {
+		query = query.Where(quiz.HasLessonWith(lesson.HasCourseWith(course.InstructorIDEQ(instructor.ID))))
+	}
 	if loaded {
 		query = query.
-			WithCourse().
+			WithLesson(
+				func(q *ent.LessonQuery) {
+					q.WithCourse()
+				},
+			).
 			WithQuestions(
 				func(q *ent.QuestionQuery) {
 					q.WithOptions()
@@ -212,11 +219,16 @@ func (c CourseManager) GetQuizBySlug(db *ent.Client, ctx context.Context, slug s
 	return quiz
 }
 
-func (c CourseManager) GetCourseLessonBySlug(db *ent.Client, ctx context.Context, slug string, loaded bool) *ent.Lesson {
+func (c CourseManager) GetCourseLessonBySlug(db *ent.Client, ctx context.Context, slug string, instructor *ent.User, loaded bool) *ent.Lesson {
 	query := db.Lesson.Query().
 		Where(lesson.SlugEQ(slug))
+
+	if instructor != nil {
+		query = query.Where(lesson.HasCourseWith(course.InstructorID(instructor.ID)))
+	}
 	if loaded {
 		query = query.
+			WithQuizzes().
 			WithCourse()
 	}
 	lesson, _ := query.Only(ctx)

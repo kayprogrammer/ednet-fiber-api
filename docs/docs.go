@@ -460,6 +460,107 @@ const docTemplate = `{
                 }
             }
         },
+        "/courses/lessons/{lesson_slug}/quizzes/{quiz_slug}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint retrieves the details of a particular quiz",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Retrieve Quiz Details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lesson Slug",
+                        "name": "lesson_slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Quiz Slug",
+                        "name": "quiz_slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.QuizResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/lessons/{slug}/quizzes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint retrieves paginated responses of a lesson quizzes",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Retrieve Lesson Quizzes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lesson Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Current Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Page Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter By Title",
+                        "name": "title",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.QuizzesResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            }
+        },
         "/courses/{course_slug}/lessons/{lesson_slug}": {
             "get": {
                 "description": "This endpoint retrieves the details of a particular lesson",
@@ -488,50 +589,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/courses.LessonResponseSchema"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/base.NotFoundErrorExample"
-                        }
-                    }
-                }
-            }
-        },
-        "/courses/{course_slug}/quizzes/{quiz_slug}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "This endpoint retrieves the details of a particular quiz",
-                "tags": [
-                    "Courses"
-                ],
-                "summary": "Retrieve Quiz Details",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Course Slug",
-                        "name": "course_slug",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Quiz Slug",
-                        "name": "quiz_slug",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/courses.QuizResponseSchema"
                         }
                     },
                     "404": {
@@ -680,63 +737,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/courses.LessonsResponseSchema"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/base.NotFoundErrorExample"
-                        }
-                    }
-                }
-            }
-        },
-        "/courses/{slug}/quizzes": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "This endpoint retrieves paginated responses of a course quizzes",
-                "tags": [
-                    "Courses"
-                ],
-                "summary": "Retrieve Course Quizzes",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Course Slug",
-                        "name": "slug",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Current Page",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 100,
-                        "description": "Page Limit",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter By Title",
-                        "name": "title",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/courses.QuizzesResponseSchema"
                         }
                     },
                     "404": {
@@ -1341,113 +1341,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/instructor/courses/{slug}/quizzes": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "` + "`" + `This endpoint retrieves the quizzes of a particular course for the authenticated instructor` + "`" + `",
-                "tags": [
-                    "Instructor"
-                ],
-                "summary": "Retrieve Course Quizzes",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Course Slug",
-                        "name": "slug",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Current Page",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 100,
-                        "description": "Page Limit",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter By Title",
-                        "name": "title",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Filter By Published Status",
-                        "name": "isPublished",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/courses.QuizzesResponseSchema"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/base.NotFoundErrorExample"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "` + "`" + `This endpoint creates a quiz of a particular course for the authenticated instructor` + "`" + `",
-                "tags": [
-                    "Instructor"
-                ],
-                "summary": "Create Course Quiz",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Course Slug",
-                        "name": "slug",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Quiz object",
-                        "name": "quiz",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/instructors.QuizCreateSchema"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/courses.QuizResponseSchema"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/base.NotFoundErrorExample"
-                        }
-                    }
-                }
-            }
-        },
         "/instructor/lessons/{slug}": {
             "get": {
                 "security": [
@@ -1601,6 +1494,113 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/base.ResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/instructor/lessons/{slug}/quizzes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "` + "`" + `This endpoint retrieves the quizzes of a particular lesson for the authenticated instructor` + "`" + `",
+                "tags": [
+                    "Instructor"
+                ],
+                "summary": "Retrieve Lesson Quizzes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lesson Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Current Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Page Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter By Title",
+                        "name": "title",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter By Published Status",
+                        "name": "isPublished",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.QuizzesResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "` + "`" + `This endpoint creates a quiz of a particular lesson for the authenticated instructor` + "`" + `",
+                "tags": [
+                    "Instructor"
+                ],
+                "summary": "Create Lesson Quiz",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lesson Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Quiz object",
+                        "name": "quiz",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instructors.QuizCreateSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/courses.QuizResponseSchema"
                         }
                     },
                     "404": {
@@ -2321,9 +2321,6 @@ const docTemplate = `{
                     "type": "number",
                     "example": 19.99
                 },
-                "quizzes_count": {
-                    "type": "integer"
-                },
                 "rating": {
                     "type": "number",
                     "example": 4.8
@@ -2530,6 +2527,9 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "order": {
+                    "type": "integer"
+                },
+                "quizzes_count": {
                     "type": "integer"
                 },
                 "slug": {

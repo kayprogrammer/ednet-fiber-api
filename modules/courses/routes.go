@@ -90,7 +90,7 @@ func GetCourseLessons(db *ent.Client) fiber.Handler {
 func GetCourseLessonDetails(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
-		lesson := courseManager.GetCourseLessonBySlug(db, ctx, c.Params("lesson_slug"), true)
+		lesson := courseManager.GetCourseLessonBySlug(db, ctx, c.Params("lesson_slug"), nil, true)
 		if lesson == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Lesson Not Found"))
 		}
@@ -147,31 +147,31 @@ func EnrollForACourse(db *ent.Client, cfg config.Config) fiber.Handler {
 	}
 }
 
-// @Summary Retrieve Course Quizzes
-// @Description This endpoint retrieves paginated responses of a course quizzes
+// @Summary Retrieve Lesson Quizzes
+// @Description This endpoint retrieves paginated responses of a lesson quizzes
 // @Tags Courses
-// @Param slug path string true "Course Slug"
+// @Param slug path string true "Lesson Slug"
 // @Param page query int false "Current Page" default(1)
 // @Param limit query int false "Page Limit" default(100)
 // @Param title query string false "Filter By Title"
 // @Success 404 {object} base.NotFoundErrorExample
 // @Success 200 {object} QuizzesResponseSchema
-// @Router /courses/{slug}/quizzes [get]
+// @Router /courses/lessons/{slug}/quizzes [get]
 // @Security BearerAuth
-func GetCourseQuizzes(db *ent.Client) fiber.Handler {
+func GetLessonQuizzes(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		user := base.RequestUser(c)
-		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), nil, false)
-		if course == nil {
-			return config.APIError(c, 404, config.NotFoundErr("Course Not Found"))
+		lesson := courseManager.GetCourseLessonBySlug(db, ctx, c.Params("slug"), nil, true)
+		if lesson == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Lesson Not Found"))
 		}
 		// Check if user is enrolled for this course
-		enrollmentObj := courseManager.GetExistentEnrollmentByUserAndCourse(db, ctx, user, course, false)
+		enrollmentObj := courseManager.GetExistentEnrollmentByUserAndCourse(db, ctx, user, lesson.Edges.Course, false)
 		if enrollmentObj == nil || enrollmentObj.PaymentStatus != enrollment.PaymentStatusSuccessful {
 			return config.APIError(c, 403, config.ForbiddenErr("Only for enrolled users"))
 		}
-		quizzes := courseManager.GetQuizzes(db, course, c)
+		quizzes := courseManager.GetQuizzes(db, lesson, c)
 
 		response := QuizzesResponseSchema{
 			ResponseSchema: base.ResponseMessage("Quizzes Fetched Successfully"),
@@ -183,25 +183,25 @@ func GetCourseQuizzes(db *ent.Client) fiber.Handler {
 // @Summary Retrieve Quiz Details
 // @Description This endpoint retrieves the details of a particular quiz
 // @Tags Courses
-// @Param course_slug path string true "Course Slug"
+// @Param lesson_slug path string true "Lesson Slug"
 // @Param quiz_slug path string true "Quiz Slug"
 // @Success 200 {object} QuizResponseSchema
 // @Success 404 {object} base.NotFoundErrorExample
-// @Router /courses/{course_slug}/quizzes/{quiz_slug} [get]
+// @Router /courses/lessons/{lesson_slug}/quizzes/{quiz_slug} [get]
 // @Security BearerAuth
-func GetCourseQuizDetails(db *ent.Client) fiber.Handler {
+func GetLessonQuizDetails(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		user := base.RequestUser(c)
-		quiz := courseManager.GetQuizBySlug(db, ctx, c.Params("quiz_slug"), true)
+		quiz := courseManager.GetQuizBySlug(db, ctx, c.Params("quiz_slug"), nil, true)
 		if quiz == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Quiz Not Found"))
 		}
-		if quiz.Edges.Course.Slug != c.Params("course_slug") {
-			return config.APIError(c, 404, config.NotFoundErr("Quiz Not Found for specified course"))
+		if quiz.Edges.Lesson.Slug != c.Params("lesson_slug") {
+			return config.APIError(c, 404, config.NotFoundErr("Quiz Not Found for specified lesson"))
 		}
 		// Check if user is enrolled for this course
-		enrollmentObj := courseManager.GetExistentEnrollmentByUserAndCourse(db, ctx, user, quiz.Edges.Course, false)
+		enrollmentObj := courseManager.GetExistentEnrollmentByUserAndCourse(db, ctx, user, quiz.Edges.Lesson.Edges.Course, false)
 		if enrollmentObj == nil || enrollmentObj.PaymentStatus != enrollment.PaymentStatusSuccessful {
 			return config.APIError(c, 403, config.ForbiddenErr("Only for enrolled users"))
 		}

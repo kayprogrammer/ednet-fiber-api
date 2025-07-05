@@ -47,6 +47,7 @@ func createCourses(db *ent.Client, ctx context.Context, instructor *ent.User, ca
 				SetIsFree(course.IsFree).
 				SetPrice(course.Price).
 				SetDiscountPrice(course.DiscountPrice).
+				SetIsPublished(rand.Intn(2) == 1).
 				Save(ctx)
 
 			if err != nil {
@@ -55,7 +56,7 @@ func createCourses(db *ent.Client, ctx context.Context, instructor *ent.User, ca
 
 			// Create Lessons for this Course
 			for _, lesson := range course.Lessons {
-				_, err := db.Lesson.Create().
+				lessonRecord, err := db.Lesson.Create().
 					SetCourseID(courseRecord.ID).
 					SetTitle(lesson.Title).
 					SetSlug(lesson.Slug).
@@ -72,45 +73,45 @@ func createCourses(db *ent.Client, ctx context.Context, instructor *ent.User, ca
 				if err != nil {
 					log.Fatalf("Failed to create lesson '%s': %v", lesson.Title, err)
 				}
-			}
 
-			// If the course has a quiz, create it
-			if course.Quiz != nil {
-				quizRecord, err := db.Quiz.Create().
-					SetCourseID(courseRecord.ID).
-					SetTitle(course.Quiz.Title).
-					SetSlug(course.Quiz.Slug).
-					SetDescription(course.Quiz.Description).
-					SetDuration(course.Quiz.Duration).
-					SetIsPublished(true).
-					Save(ctx)
-
-				if err != nil {
-					log.Fatalf("Failed to create quiz for course '%s': %v", course.Title, err)
-				}
-
-				// Create Questions for this Quiz
-				for _, questionData := range course.Quiz.Questions {
-					questionRecord, err := db.Question.Create().
-						SetQuizID(quizRecord.ID).
-						SetText(questionData.Text).
-						SetOrder(questionData.Order).
+				// If the lesson has a quiz, create it
+				if lesson.Quiz != nil {
+					quizRecord, err := db.Quiz.Create().
+						SetLesson(lessonRecord).
+						SetTitle(lesson.Quiz.Title).
+						SetSlug(lesson.Quiz.Slug).
+						SetDescription(lesson.Quiz.Description).
+						SetDuration(lesson.Quiz.Duration).
+						SetIsPublished(true).
 						Save(ctx)
 
 					if err != nil {
-						log.Fatalf("Failed to create question '%s': %v", questionData.Text, err)
+						log.Fatalf("Failed to create quiz for lesson '%s': %v", lesson.Title, err)
 					}
 
-					// Create Options for this Question
-					for _, optionData := range questionData.Options {
-						_, err := db.QuestionOption.Create().
-							SetQuestionID(questionRecord.ID).
-							SetText(optionData.Text).
-							SetIsCorrect(optionData.IsCorrect).
+					// Create Questions for this Quiz
+					for _, questionData := range lesson.Quiz.Questions {
+						questionRecord, err := db.Question.Create().
+							SetQuiz(quizRecord).
+							SetText(questionData.Text).
+							SetOrder(questionData.Order).
 							Save(ctx)
 
 						if err != nil {
-							log.Fatalf("Failed to create option for question '%s': %v", questionData.Text, err)
+							log.Fatalf("Failed to create question '%s': %v", questionData.Text, err)
+						}
+
+						// Create Options for this Question
+						for _, optionData := range questionData.Options {
+							_, err := db.QuestionOption.Create().
+								SetQuestion(questionRecord).
+								SetText(optionData.Text).
+								SetIsCorrect(optionData.IsCorrect).
+								Save(ctx)
+
+							if err != nil {
+								log.Fatalf("Failed to create option for question '%s': %v", questionData.Text, err)
+							}
 						}
 					}
 				}

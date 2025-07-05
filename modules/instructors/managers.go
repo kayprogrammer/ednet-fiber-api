@@ -29,7 +29,6 @@ func (i InstructorManager) CreateCourse(db *ent.Client, ctx context.Context, ins
 	course.Edges.Instructor = instructor
 	course.Edges.Category = category
 	course.Edges.Reviews = []*ent.Review{}
-	course.Edges.Quizzes = []*ent.Quiz{}
 	course.Edges.Enrollments = []*ent.Enrollment{}
 	course.Edges.Lessons = []*ent.Lesson{}
 	return course
@@ -57,7 +56,6 @@ func (i InstructorManager) UpdateCourse(db *ent.Client, ctx context.Context, cou
 	updatedCourse.Edges.Instructor = course.Edges.Instructor
 	updatedCourse.Edges.Category = category
 	updatedCourse.Edges.Reviews = course.Edges.Reviews
-	updatedCourse.Edges.Quizzes = course.Edges.Quizzes
 	updatedCourse.Edges.Enrollments = course.Edges.Enrollments
 	updatedCourse.Edges.Lessons = course.Edges.Lessons
 	return updatedCourse
@@ -99,20 +97,6 @@ func (i InstructorManager) GetCoursesPaginated(db *ent.Client, fibCtx *fiber.Ctx
 	query = courseManager.ApplyCourseFilters(fibCtx, query)
 	courses := config.PaginateModel(fibCtx, query)
 	return courses
-}
-
-func (i InstructorManager) GetCourseLessonBySlug(db *ent.Client, ctx context.Context, instructor *ent.User, slug string, loaded bool) *ent.Lesson {
-	query := db.Lesson.Query().
-		Where(
-			lesson.SlugEQ(slug),
-			lesson.HasCourseWith(course.InstructorIDEQ(instructor.ID)),
-		)
-	if loaded {
-		query = query.
-			WithCourse()
-	}
-	lessonObj, _ := query.Only(ctx)
-	return lessonObj
 }
 
 func (i InstructorManager) GenerateLessonSlug(db *ent.Client, ctx context.Context, title string) string {
@@ -184,29 +168,10 @@ func (i InstructorManager) GenerateQuizSlug(db *ent.Client, ctx context.Context,
 	return uniqueSlug
 }
 
-func (i InstructorManager) GetCourseQuizBySlug(db *ent.Client, ctx context.Context, instructor *ent.User, slug string, loaded bool) *ent.Quiz {
-	query := db.Quiz.Query().
-		Where(
-			quiz.SlugEQ(slug),
-			quiz.HasCourseWith(course.InstructorIDEQ(instructor.ID)),
-		)
-	if loaded {
-		query = query.
-			WithCourse().
-			WithQuestions(
-				func(q *ent.QuestionQuery) {
-					q.WithOptions()
-				},
-			)
-	}
-	quizObj, _ := query.Only(ctx)
-	return quizObj
-}
-
-func (i InstructorManager) CreateQuiz(db *ent.Client, ctx context.Context, course *ent.Course, data QuizCreateSchema) *ent.Quiz {
+func (i InstructorManager) CreateQuiz(db *ent.Client, ctx context.Context, lesson *ent.Lesson, data QuizCreateSchema) *ent.Quiz {
 	slug := i.GenerateQuizSlug(db, ctx, data.Title)
 	quizObj := db.Quiz.Create().SetTitle(data.Title).SetSlug(slug).SetDescription(data.Description).
-		SetCourse(course).SetDuration(data.Duration).SetIsPublished(data.IsPublished).
+		SetLesson(lesson).SetDuration(data.Duration).SetIsPublished(data.IsPublished).
 		SaveX(ctx)
 
 	// Create questions and options in bulk
@@ -223,8 +188,7 @@ func (i InstructorManager) CreateQuiz(db *ent.Client, ctx context.Context, cours
 		}
 	}
 	db.QuestionOption.CreateBulk(optionsToCreate...).SaveX(ctx)
-
-	return i.GetCourseQuizBySlug(db, ctx, course.Edges.Instructor, slug, true)
+	return courseManager.GetQuizBySlug(db, ctx, slug, nil, true)
 }
 
 func (i InstructorManager) UpdateQuiz(db *ent.Client, ctx context.Context, quiz *ent.Quiz, instructor *ent.User, data QuizCreateSchema) *ent.Quiz {
@@ -258,12 +222,12 @@ func (i InstructorManager) UpdateQuiz(db *ent.Client, ctx context.Context, quiz 
 	}
 	db.QuestionOption.CreateBulk(optionsToCreate...).SaveX(ctx)
 
-	return i.GetCourseQuizBySlug(db, ctx, instructor, slug, true)
+	return courseManager.GetQuizBySlug(db, ctx, slug, nil, true)
 }
 
 func (i InstructorManager) DeleteQuiz(db *ent.Client, ctx context.Context, quizObj *ent.Quiz) *string {
 	// Prevent deletion if there's a paid enrollment for a published quiz
-	enrollmentExists := db.Enrollment.Query().Where(enrollment.CourseIDEQ(quizObj.CourseID), enrollment.PaymentStatusEQ(enrollment.PaymentStatusSuccessful)).ExistX(ctx)
+	enrollmentExists := db.Enrollment.Query().Where(enrollment.CourseIDEQ(quizObj.Edges.Lesson.CourseID), enrollment.PaymentStatusEQ(enrollment.PaymentStatusSuccessful)).ExistX(ctx)
 	if enrollmentExists && quizObj.IsPublished {
 		errMsg := "Cannot delete a published quiz which has at least one paid enrollment"
 		return &errMsg

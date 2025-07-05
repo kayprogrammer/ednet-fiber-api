@@ -92,7 +92,6 @@ func (c CoursesResponseSchema) Assign(coursesData *config.PaginationResponse[*en
 type CourseDetailSchema struct {
 	CourseListSchema
 	IntroVideoURL  *string               `json:"intro_video_url,omitempty"`
-	QuizzesCount   int                   `json:"quizzes_count"`
 	Duration       uint                  `json:"duration"` // in minutes
 	EnrollmentType course.EnrollmentType `json:"enrollment_type"`
 	Certification  bool                  `json:"certification"`
@@ -103,7 +102,6 @@ type CourseDetailSchema struct {
 func (c CourseDetailSchema) Assign(course *ent.Course) CourseDetailSchema {
 	c.CourseListSchema = c.CourseListSchema.Assign(course)
 	c.IntroVideoURL = &course.IntroVideoURL
-	c.QuizzesCount = len(course.Edges.Quizzes)
 	c.Duration = course.Duration
 	c.EnrollmentType = course.EnrollmentType
 	c.Certification = course.Certification
@@ -160,6 +158,7 @@ func (l LessonsResponseSchema) Assign(lessonsData *config.PaginationResponse[*en
 
 type LessonDetailSchema struct {
 	LessonListSchema
+	QuizzesCount   int                   `json:"quizzes_count"`
 	VideoUrl string `json:"video_url"`
 	Content  string `json:"content"`
 }
@@ -167,6 +166,7 @@ type LessonDetailSchema struct {
 // Assign values from Lesson to LessonDetailSchema
 func (l LessonDetailSchema) Assign(lesson *ent.Lesson) LessonDetailSchema {
 	l.LessonListSchema = l.LessonListSchema.Assign(lesson)
+	l.QuizzesCount = len(lesson.Edges.Quizzes)
 	l.VideoUrl = lesson.VideoURL
 	l.Content = lesson.Content
 	return l

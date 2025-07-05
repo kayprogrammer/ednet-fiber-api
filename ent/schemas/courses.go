@@ -89,7 +89,6 @@ func (Course) Edges() []ent.Edge {
 		edge.To("enrollments", Enrollment.Type),
 		edge.To("reviews", Review.Type),
 		edge.To("payments", Payment.Type),
-		edge.To("quizzes", Quiz.Type),
 	}
 }
 
@@ -120,6 +119,7 @@ func (Lesson) Fields() []ent.Field {
 func (Lesson) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("course", Course.Type).Ref("lessons").Field("course_id").Unique().Required(),
+		edge.To("quizzes", Quiz.Type),
 	}
 }
 
@@ -196,7 +196,7 @@ type Quiz struct {
 func (Quiz) Fields() []ent.Field {
 	return append(
 		CommonFields,
-		field.UUID("course_id", uuid.UUID{}),
+		field.UUID("lesson_id", uuid.UUID{}),
 		field.String("title").NotEmpty(),
 		field.String("slug").Unique(),
 		field.Text("description").Optional(),
@@ -208,7 +208,7 @@ func (Quiz) Fields() []ent.Field {
 // Edges of the Quiz.
 func (Quiz) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("course", Course.Type).Ref("quizzes").Field("course_id").Unique().Required(),
+		edge.From("lesson", Lesson.Type).Ref("quizzes").Field("lesson_id").Unique().Required(),
 		edge.To("questions", Question.Type),
 	}
 }

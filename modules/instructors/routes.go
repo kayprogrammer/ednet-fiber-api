@@ -257,7 +257,7 @@ func CreateInstructorCourseLesson(db *ent.Client) fiber.Handler {
 
 		response := courses.LessonResponseSchema{
 			ResponseSchema: base.ResponseMessage("Lesson Created Successfully"),
-			Data: courses.LessonDetailSchema{}.Assign(lesson),
+			Data:           courses.LessonDetailSchema{}.Assign(lesson),
 		}
 		return c.Status(201).JSON(response)
 	}
@@ -275,7 +275,7 @@ func GetInstructorCourseLessonDetails(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		user := base.RequestUser(c)
-		lesson := instructorManager.GetCourseLessonBySlug(db, ctx, user, c.Params("slug"), true)
+		lesson := courseManager.GetCourseLessonBySlug(db, ctx, c.Params("slug"), user, true)
 		if lesson == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Instructor lesson not found"))
 		}
@@ -302,7 +302,7 @@ func UpdateCourseLesson(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		user := base.RequestUser(c)
-		lesson := instructorManager.GetCourseLessonBySlug(db, ctx, user, c.Params("slug"), false)
+		lesson := courseManager.GetCourseLessonBySlug(db, ctx, c.Params("slug"), user, false)
 		if lesson == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Instructor lesson not found"))
 		}
@@ -335,7 +335,7 @@ func UpdateCourseLesson(db *ent.Client) fiber.Handler {
 
 		response := courses.LessonResponseSchema{
 			ResponseSchema: base.ResponseMessage("Lesson Updated Successfully"),
-			Data: courses.LessonDetailSchema{}.Assign(lesson),
+			Data:           courses.LessonDetailSchema{}.Assign(lesson),
 		}
 		return c.Status(200).JSON(response)
 	}
@@ -353,7 +353,7 @@ func DeleteCourseLesson(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		user := base.RequestUser(c)
-		lesson := instructorManager.GetCourseLessonBySlug(db, ctx, user, c.Params("slug"), false)
+		lesson := courseManager.GetCourseLessonBySlug(db, ctx, c.Params("slug"), user, false)
 		if lesson == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Instructor lesson not found"))
 		}
@@ -365,27 +365,27 @@ func DeleteCourseLesson(db *ent.Client) fiber.Handler {
 	}
 }
 
-// @Summary Retrieve Course Quizzes
-// @Description `This endpoint retrieves the quizzes of a particular course for the authenticated instructor`
+// @Summary Retrieve Lesson Quizzes
+// @Description `This endpoint retrieves the quizzes of a particular lesson for the authenticated instructor`
 // @Tags Instructor
-// @Param slug path string true "Course Slug"
+// @Param slug path string true "Lesson Slug"
 // @Success 200 {object} courses.QuizzesResponseSchema
 // @Success 404 {object} base.NotFoundErrorExample
 // @Param page query int false "Current Page" default(1)
 // @Param limit query int false "Page Limit" default(100)
 // @Param title query string false "Filter By Title"
 // @Param isPublished query bool false "Filter By Published Status"
-// @Router /instructor/courses/{slug}/quizzes [get]
+// @Router /instructor/lessons/{slug}/quizzes [get]
 // @Security BearerAuth
-func GetInstructorCourseQuizzes(db *ent.Client) fiber.Handler {
+func GetInstructorLessonQuizzes(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		user := base.RequestUser(c)
-		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), user, true)
-		if course == nil {
-			return config.APIError(c, 404, config.NotFoundErr("Instructor has no course with that slug"))
+		lesson := courseManager.GetCourseLessonBySlug(db, ctx, c.Params("slug"), user, true)
+		if lesson == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Instructor has no lesson with that slug"))
 		}
-		quizzes := courseManager.GetQuizzes(db, course, c)
+		quizzes := courseManager.GetQuizzes(db, lesson, c)
 
 		response := courses.QuizzesResponseSchema{
 			ResponseSchema: base.ResponseMessage("Quizzes Fetched Successfully"),
@@ -394,22 +394,22 @@ func GetInstructorCourseQuizzes(db *ent.Client) fiber.Handler {
 	}
 }
 
-// @Summary Create Course Quiz
-// @Description `This endpoint creates a quiz of a particular course for the authenticated instructor`
+// @Summary Create Lesson Quiz
+// @Description `This endpoint creates a quiz of a particular lesson for the authenticated instructor`
 // @Tags Instructor
-// @Param slug path string true "Course Slug"
+// @Param slug path string true "Lesson Slug"
 // @Param quiz body QuizCreateSchema true "Quiz object"
 // @Success 201 {object} courses.QuizResponseSchema
 // @Success 404 {object} base.NotFoundErrorExample
-// @Router /instructor/courses/{slug}/quizzes [post]
+// @Router /instructor/lessons/{slug}/quizzes [post]
 // @Security BearerAuth
-func CreateInstructorCourseQuiz(db *ent.Client) fiber.Handler {
+func CreateInstructorLessonQuiz(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		user := base.RequestUser(c)
-		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), user, true)
-		if course == nil {
-			return config.APIError(c, 404, config.NotFoundErr("Instructor has no course with that slug"))
+		lesson := courseManager.GetCourseLessonBySlug(db, ctx, c.Params("slug"), user, true)
+		if lesson == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Instructor has no lesson with that slug"))
 		}
 
 		data := QuizCreateSchema{}
@@ -417,7 +417,7 @@ func CreateInstructorCourseQuiz(db *ent.Client) fiber.Handler {
 			return config.APIError(c, *errCode, *errData)
 		}
 
-		quiz := instructorManager.CreateQuiz(db, ctx, course, data)
+		quiz := instructorManager.CreateQuiz(db, ctx, lesson, data)
 
 		response := courses.QuizResponseSchema{
 			ResponseSchema: base.ResponseMessage("Quiz Created Successfully"),
@@ -435,11 +435,11 @@ func CreateInstructorCourseQuiz(db *ent.Client) fiber.Handler {
 // @Success 404 {object} base.NotFoundErrorExample
 // @Router /instructor/quizzes/{slug} [get]
 // @Security BearerAuth
-func GetInstructorCourseQuizDetails(db *ent.Client) fiber.Handler {
+func GetInstructorLessonQuizDetails(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		user := base.RequestUser(c)
-		quiz := instructorManager.GetCourseQuizBySlug(db, ctx, user, c.Params("slug"), true)
+		quiz := courseManager.GetQuizBySlug(db, ctx, c.Params("slug"), user, true)
 		if quiz == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Instructor quiz not found"))
 		}
@@ -460,11 +460,11 @@ func GetInstructorCourseQuizDetails(db *ent.Client) fiber.Handler {
 // @Success 404 {object} base.NotFoundErrorExample
 // @Router /instructor/quizzes/{slug} [put]
 // @Security BearerAuth
-func UpdateCourseQuiz(db *ent.Client) fiber.Handler {
+func UpdateLessonQuiz(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		user := base.RequestUser(c)
-		quiz := instructorManager.GetCourseQuizBySlug(db, ctx, user, c.Params("slug"), false)
+		quiz := courseManager.GetQuizBySlug(db, ctx, c.Params("slug"), user, false)
 		if quiz == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Instructor quiz not found"))
 		}
@@ -492,11 +492,11 @@ func UpdateCourseQuiz(db *ent.Client) fiber.Handler {
 // @Success 404 {object} base.NotFoundErrorExample
 // @Router /instructor/quizzes/{slug} [delete]
 // @Security BearerAuth
-func DeleteCourseQuiz(db *ent.Client) fiber.Handler {
+func DeleteLessonQuiz(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.Context()
 		user := base.RequestUser(c)
-		quiz := instructorManager.GetCourseQuizBySlug(db, ctx, user, c.Params("slug"), false)
+		quiz := courseManager.GetQuizBySlug(db, ctx, c.Params("slug"), user, true)
 		if quiz == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Instructor quiz not found"))
 		}
