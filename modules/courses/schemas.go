@@ -158,9 +158,9 @@ func (l LessonsResponseSchema) Assign(lessonsData *config.PaginationResponse[*en
 
 type LessonDetailSchema struct {
 	LessonListSchema
-	QuizzesCount   int                   `json:"quizzes_count"`
-	VideoUrl string `json:"video_url"`
-	Content  string `json:"content"`
+	QuizzesCount int    `json:"quizzes_count"`
+	VideoUrl     string `json:"video_url"`
+	Content      string `json:"content"`
 }
 
 // Assign values from Lesson to LessonDetailSchema
@@ -248,14 +248,16 @@ func (q QuizDetailSchema) Assign(quiz *ent.Quiz) QuizDetailSchema {
 }
 
 type QuestionSchema struct {
+	ID      uuid.UUID              `json:"id"`
 	Order   int                    `json:"order"`
 	Text    string                 `json:"text"`
 	Options []QuestionOptionSchema `json:"options"`
 }
 
 type QuestionOptionSchema struct {
-	Text      string `json:"text"`
-	IsCorrect bool   `json:"is_correct"`
+	ID        uuid.UUID `json:"id"`
+	Text      string    `json:"text"`
+	IsCorrect bool      `json:"is_correct"`
 }
 
 type EnrollForACourseSchema struct {
@@ -285,4 +287,50 @@ func (e EnrollmentSchema) Assign(enrollmentObj *ent.Enrollment) EnrollmentSchema
 type EnrollmentResponseSchema struct {
 	base.ResponseSchema
 	Data EnrollmentSchema `json:"data"`
+}
+
+type SubmitAnswerSchema struct {
+	QuestionID       uuid.UUID `json:"question_id" validate:"required"`
+	SelectedOptionID uuid.UUID `json:"selected_option_id" validate:"required"`
+}
+
+type QuizSubmissionSchema struct {
+	Answers   []SubmitAnswerSchema `json:"answers" validate:"required,min=1"`
+	TimeTaken int                  `json:"time_taken" validate:"required,min=1"` // in seconds
+}
+
+type AnswerSchema struct {
+	QuestionID       uuid.UUID `json:"question_id" validate:"required"`
+	SelectedOptionID uuid.UUID `json:"selected_option_id" validate:"required"`
+}
+
+type QuizResultSchema struct {
+	ID          uuid.UUID      `json:"id"`
+	Score       float64        `json:"score"`
+	TimeTaken   int            `json:"time_taken"`
+	StartedAt   time.Time      `json:"started_at"`
+	CompletedAt time.Time      `json:"completed_at"`
+	Answers     []AnswerSchema `json:"answers"`
+}
+
+func (q QuizResultSchema) Assign(quizResult *ent.QuizResult) QuizResultSchema {
+	q.ID = quizResult.ID
+	q.Score = quizResult.Score
+	q.TimeTaken = quizResult.TimeTaken
+	q.StartedAt = quizResult.StartedAt
+	q.CompletedAt = quizResult.CompletedAt
+	answers := make([]AnswerSchema, 0)
+	for _, answer := range quizResult.Edges.Answers {
+		answers = append(answers, AnswerSchema{
+			QuestionID:       answer.QuestionID,
+			SelectedOptionID: answer.SelectedOptionID,
+		})
+	}
+	q.Answers = answers
+	return q
+}
+
+type QuizResultResponseSchema struct {
+	base.ResponseSchema
+	Data QuizResultSchema `json:"data"`
 }

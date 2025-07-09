@@ -183,11 +183,10 @@ func GetLessonQuizzes(db *ent.Client) fiber.Handler {
 // @Summary Retrieve Quiz Details
 // @Description This endpoint retrieves the details of a particular quiz
 // @Tags Courses
-// @Param lesson_slug path string true "Lesson Slug"
 // @Param quiz_slug path string true "Quiz Slug"
 // @Success 200 {object} QuizResponseSchema
 // @Success 404 {object} base.NotFoundErrorExample
-// @Router /courses/lessons/{lesson_slug}/quizzes/{quiz_slug} [get]
+// @Router /courses/quizzes/{quiz_slug} [get]
 // @Security BearerAuth
 func GetLessonQuizDetails(db *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
@@ -197,9 +196,6 @@ func GetLessonQuizDetails(db *ent.Client) fiber.Handler {
 		if quiz == nil {
 			return config.APIError(c, 404, config.NotFoundErr("Quiz Not Found"))
 		}
-		if quiz.Edges.Lesson.Slug != c.Params("lesson_slug") {
-			return config.APIError(c, 404, config.NotFoundErr("Quiz Not Found for specified lesson"))
-		}
 		// Check if user is enrolled for this course
 		enrollmentObj := courseManager.GetExistentEnrollmentByUserAndCourse(db, ctx, user, quiz.Edges.Lesson.Edges.Course, false)
 		if enrollmentObj == nil || enrollmentObj.PaymentStatus != enrollment.PaymentStatusSuccessful {
@@ -208,6 +204,108 @@ func GetLessonQuizDetails(db *ent.Client) fiber.Handler {
 		response := QuizResponseSchema{
 			ResponseSchema: base.ResponseMessage("Quiz Details Fetched Successfully"),
 			Data:           QuizDetailSchema{}.Assign(quiz),
+		}
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Start Quiz
+// @Description `This endpoint allows a user to start a quiz`
+// @Tags Courses
+// @Param quiz_slug path string true "Quiz Slug"
+// @Success 200 {object} base.ResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Success 400 {object} base.InvalidErrorExample
+// @Router /courses/quizzes/{quiz_slug}/start [get]
+// @Security BearerAuth
+func StartQuiz(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		quiz := courseManager.GetQuizBySlug(db, ctx, c.Params("quiz_slug"), nil, true)
+		if quiz == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Quiz Not Found"))
+		}
+		// Check if user is enrolled for this course
+		enrollmentObj := courseManager.GetExistentEnrollmentByUserAndCourse(db, ctx, user, quiz.Edges.Lesson.Edges.Course, false)
+		if enrollmentObj == nil || enrollmentObj.PaymentStatus != enrollment.PaymentStatusSuccessful {
+			return config.APIError(c, 403, config.ForbiddenErr("Only for enrolled users"))
+		}
+
+		_, err := courseManager.CreateQuizResultData(db, ctx, user, quiz)
+		if err != nil {
+			return config.APIError(c, 400, *err)
+		}
+		return c.Status(200).JSON(base.ResponseMessage("Quiz started successfully"))
+	}
+}
+
+// @Summary Submit Quiz
+// @Description `This endpoint allows a user to submit their answers for a quiz`
+// @Tags Courses
+// @Param quiz_slug path string true "Quiz Slug"
+// @Param result body QuizSubmissionSchema true "Submission object"
+// @Success 200 {object} QuizResultResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Success 400 {object} base.InvalidErrorExample
+// @Failure 422 {object} base.ValidationErrorExample
+// @Router /courses/quizzes/{quiz_slug}/results [post]
+// @Security BearerAuth
+func SubmitQuizResult(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		quiz := courseManager.GetQuizBySlug(db, ctx, c.Params("quiz_slug"), nil, true)
+		if quiz == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Quiz Not Found"))
+		}
+
+		quizResult := courseManager.GetQuizResult(db, ctx, user, quiz.ID)
+		if quizResult == nil {
+			return config.APIError(c, 404, config.NotFoundErr("You cannot submit a quiz you didn't start"))
+		}
+		data := QuizSubmissionSchema{}
+		// Validate request
+		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+
+		quizResult, err := courseManager.SaveQuizResult(db, ctx, user, quiz, quizResult, data)
+		if err != nil {
+			return config.APIError(c, 400, *err)
+		}
+
+		response := QuizResultResponseSchema{
+			ResponseSchema: base.ResponseMessage("Quiz Submitted Successfully"),
+			Data:           QuizResultSchema{}.Assign(quizResult),
+		}
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Retrieve Quiz Result
+// @Description `This endpoint retrieves the result of a particular quiz for a user`
+// @Tags Courses
+// @Param quiz_slug path string true "Quiz Slug"
+// @Success 200 {object} QuizResultResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Router /courses/quizzes/{quiz_slug}/results [get]
+// @Security BearerAuth
+func GetQuizResult(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		quiz := courseManager.GetQuizBySlug(db, ctx, c.Params("quiz_slug"), nil, true)
+		if quiz == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Quiz Not Found"))
+		}
+		quizResult := courseManager.GetQuizResult(db, ctx, user, quiz.ID)
+		if quizResult == nil {
+			return config.APIError(c, 404, config.NotFoundErr("You cannot submit a quiz you didn't start"))
+		}
+		response := QuizResultResponseSchema{
+			ResponseSchema: base.ResponseMessage("Quiz Result Fetched Successfully"),
+			Data:           QuizResultSchema{}.Assign(quizResult),
 		}
 		return c.Status(200).JSON(response)
 	}

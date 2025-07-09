@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -12,6 +13,21 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/modules/base/routes"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/seeding"
 )
+
+// Custom panic recovery middleware
+func RecoveryMiddleware() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		defer func() {
+			if r := recover(); r != nil {
+				// Log the panic
+				log.Printf("[PANIC] %v\n", r)
+				// Return a safe JSON response
+				_ = config.APIError(c, 500, config.ServerErr("Something went wrong!"))
+			}
+		}()
+		return c.Next()
+	}
+}
 
 // @title EDNET API
 // @version 1.0
@@ -32,6 +48,11 @@ func main() {
 
 	app := fiber.New()
 
+	// Register custom panic recovery middleware
+	app.Use(RecoveryMiddleware())
+
+	app.Get("/metrics", monitor.New())
+
 	// CORS config
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     cfg.CORSAllowedOrigins,
@@ -51,6 +72,9 @@ func main() {
 	app.Use(swagger.New(swaggerCfg))
 
 	routes.SetupRoutes(app, db, cfg)
+	app.Use(func(c *fiber.Ctx) error {
+		return config.APIError(c, 404, config.NotFoundErr("Path not found"))
+	})
 	defer db.Close()
 	log.Fatal(app.Listen(fmt.Sprintf(":%s", cfg.Port)))
 }

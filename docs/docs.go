@@ -460,50 +460,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/courses/lessons/{lesson_slug}/quizzes/{quiz_slug}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "This endpoint retrieves the details of a particular quiz",
-                "tags": [
-                    "Courses"
-                ],
-                "summary": "Retrieve Quiz Details",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Lesson Slug",
-                        "name": "lesson_slug",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Quiz Slug",
-                        "name": "quiz_slug",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/courses.QuizResponseSchema"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/base.NotFoundErrorExample"
-                        }
-                    }
-                }
-            }
-        },
         "/courses/lessons/{slug}/quizzes": {
             "get": {
                 "security": [
@@ -550,6 +506,179 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/courses.QuizzesResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/quizzes/{quiz_slug}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint retrieves the details of a particular quiz",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Retrieve Quiz Details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz Slug",
+                        "name": "quiz_slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.QuizResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/quizzes/{quiz_slug}/results": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "` + "`" + `This endpoint retrieves the result of a particular quiz for a user` + "`" + `",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Retrieve Quiz Result",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz Slug",
+                        "name": "quiz_slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.QuizResultResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "` + "`" + `This endpoint allows a user to submit their answers for a quiz` + "`" + `",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Submit Quiz",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz Slug",
+                        "name": "quiz_slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Submission object",
+                        "name": "result",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/courses.QuizSubmissionSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.QuizResultResponseSchema"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.InvalidErrorExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/quizzes/{quiz_slug}/start": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "` + "`" + `This endpoint allows a user to start a quiz` + "`" + `",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Start Quiz",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz Slug",
+                        "name": "quiz_slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/base.ResponseSchema"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.InvalidErrorExample"
                         }
                     },
                     "404": {
@@ -2251,6 +2380,21 @@ const docTemplate = `{
                 "EnrollmentTypeInviteOnly"
             ]
         },
+        "courses.AnswerSchema": {
+            "type": "object",
+            "required": [
+                "question_id",
+                "selected_option_id"
+            ],
+            "properties": {
+                "question_id": {
+                    "type": "string"
+                },
+                "selected_option_id": {
+                    "type": "string"
+                }
+            }
+        },
         "courses.CategoryOrTagSchema": {
             "type": "object",
             "properties": {
@@ -2612,6 +2756,9 @@ const docTemplate = `{
         "courses.QuestionOptionSchema": {
             "type": "object",
             "properties": {
+                "id": {
+                    "type": "string"
+                },
                 "is_correct": {
                     "type": "boolean"
                 },
@@ -2623,6 +2770,9 @@ const docTemplate = `{
         "courses.QuestionSchema": {
             "type": "object",
             "properties": {
+                "id": {
+                    "type": "string"
+                },
                 "options": {
                     "type": "array",
                     "items": {
@@ -2711,6 +2861,69 @@ const docTemplate = `{
                 }
             }
         },
+        "courses.QuizResultResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/courses.QuizResultSchema"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "courses.QuizResultSchema": {
+            "type": "object",
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/courses.AnswerSchema"
+                    }
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "number"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "time_taken": {
+                    "type": "integer"
+                }
+            }
+        },
+        "courses.QuizSubmissionSchema": {
+            "type": "object",
+            "required": [
+                "answers",
+                "time_taken"
+            ],
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/courses.SubmitAnswerSchema"
+                    }
+                },
+                "time_taken": {
+                    "description": "in seconds",
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
         "courses.QuizzesResponseSchema": {
             "type": "object",
             "properties": {
@@ -2724,6 +2937,21 @@ const docTemplate = `{
                 "status": {
                     "type": "string",
                     "example": "success"
+                }
+            }
+        },
+        "courses.SubmitAnswerSchema": {
+            "type": "object",
+            "required": [
+                "question_id",
+                "selected_option_id"
+            ],
+            "properties": {
+                "question_id": {
+                    "type": "string"
+                },
+                "selected_option_id": {
+                    "type": "string"
                 }
             }
         },

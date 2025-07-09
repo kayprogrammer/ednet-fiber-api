@@ -51,13 +51,13 @@ func UpdateProfile(db *ent.Client) fiber.Handler {
 		if existingUser != nil && existingUser.ID != user.ID {
 			return config.APIError(c, 422, config.ValidationErr("username", "Username already used"))
 		}
-		
+
 		// Check and validate image
 		file, err := config.ValidateImage(c, "avatar", false)
 		if err != nil {
 			return c.Status(422).JSON(err)
 		}
-		
+
 		// Upload File
 		var avatar *string
 		if file != nil {

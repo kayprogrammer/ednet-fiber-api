@@ -1,6 +1,7 @@
 package courses
 
 import (
+	"time"
 	"context"
 	"fmt"
 	"strconv"
@@ -8,13 +9,16 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/category"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/enrollment"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/lesson"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/questionoption"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/quiz"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/quizresult"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/review"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 )
@@ -72,7 +76,7 @@ func (c CourseManager) ApplyCourseFilters(fibCtx *fiber.Ctx, query *ent.CourseQu
 				course.Table,
 				course.FieldID,
 			)
-			
+
 			// Apply sort order based on variable
 			if strings.ToLower(sortBy) == "desc" {
 				s.OrderBy(sql.Desc(avgExpr))
@@ -83,7 +87,6 @@ func (c CourseManager) ApplyCourseFilters(fibCtx *fiber.Ctx, query *ent.CourseQu
 	}
 	return query
 }
-
 
 func (c CourseManager) GetAll(db *ent.Client, ctx context.Context) []*ent.Course {
 	courses := db.Course.Query().
@@ -107,8 +110,6 @@ func (c CourseManager) GetAllPaginated(db *ent.Client, fibCtx *fiber.Ctx) *confi
 	query = c.ApplyCourseFilters(fibCtx, query)
 	return config.PaginateModel(fibCtx, query)
 }
-
-
 
 func (c CourseManager) GetCourseByName(db *ent.Client, ctx context.Context, name string) *ent.Course {
 	course, _ := db.Course.Query().Where(course.TitleEQ(name)).First(ctx)
@@ -198,7 +199,7 @@ func (c CourseManager) GetQuizzes(db *ent.Client, lesson *ent.Lesson, fibCtx *fi
 func (c CourseManager) GetQuizBySlug(db *ent.Client, ctx context.Context, slug string, instructor *ent.User, loaded bool) *ent.Quiz {
 	query := db.Quiz.Query().
 		Where(quiz.SlugEQ(slug))
-	
+
 	if instructor != nil {
 		query = query.Where(quiz.HasLessonWith(lesson.HasCourseWith(course.InstructorIDEQ(instructor.ID))))
 	}
@@ -235,7 +236,7 @@ func (c CourseManager) GetCourseLessonBySlug(db *ent.Client, ctx context.Context
 	return lesson
 }
 
-func (c CourseManager) GetExistentEnrollmentByUserAndCourse (db *ent.Client, ctx context.Context, user *ent.User, course *ent.Course, loaded bool) *ent.Enrollment {
+func (c CourseManager) GetExistentEnrollmentByUserAndCourse(db *ent.Client, ctx context.Context, user *ent.User, course *ent.Course, loaded bool) *ent.Enrollment {
 	query := db.Enrollment.Query().
 		Where(
 			enrollment.UserID(user.ID),
@@ -250,7 +251,7 @@ func (c CourseManager) GetExistentEnrollmentByUserAndCourse (db *ent.Client, ctx
 	return enrollmentObj
 }
 
-func (c CourseManager) CreateEnrollment (db *ent.Client, ctx context.Context, user *ent.User, course *ent.Course, checkoutUrl string) (*ent.Enrollment, *config.ErrorResponse) {
+func (c CourseManager) CreateEnrollment(db *ent.Client, ctx context.Context, user *ent.User, course *ent.Course, checkoutUrl string) (*ent.Enrollment, *config.ErrorResponse) {
 	existentEnrollment := c.GetExistentEnrollmentByUserAndCourse(db, ctx, user, course, false)
 	if existentEnrollment != nil {
 		err := config.RequestErr(config.ERR_NOT_ALLOWED, "Enrollment has been created already")
@@ -261,11 +262,11 @@ func (c CourseManager) CreateEnrollment (db *ent.Client, ctx context.Context, us
 		SetCourse(course).
 		SetUser(user).
 		SetCheckoutURL(checkoutUrl)
-	
-		if course.IsFree {
-			enrollmentQuery = enrollmentQuery.SetStatus(enrollment.StatusActive).
+
+	if course.IsFree {
+		enrollmentQuery = enrollmentQuery.SetStatus(enrollment.StatusActive).
 			SetPaymentStatus(enrollment.PaymentStatusSuccessful)
-		}
+	}
 	enrollmentObj := enrollmentQuery.SaveX(ctx)
 	enrollmentObj.Edges.User = user
 	enrollmentObj.Edges.Course = course
@@ -273,14 +274,97 @@ func (c CourseManager) CreateEnrollment (db *ent.Client, ctx context.Context, us
 }
 
 func (c CourseManager) GetAverageRating(reviews []*ent.Review) float64 {
-    if len(reviews) == 0 {
-        return 0.0
-    }
+	if len(reviews) == 0 {
+		return 0.0
+	}
 
-    var total float64
-    for _, review := range reviews {
-        total += float64(review.Rating) // Assuming Rating is int or float
-    }
+	var total float64
+	for _, review := range reviews {
+		total += float64(review.Rating) // Assuming Rating is int or float
+	}
 
-    return total / float64(len(reviews))
+	return total / float64(len(reviews))
+}
+
+func (c CourseManager) CreateQuizResultData(
+	db *ent.Client, ctx context.Context, user *ent.User, quiz *ent.Quiz,
+) (*ent.QuizResult, *config.ErrorResponse) {
+	// Check if the user has already created a result for this quiz
+	existingResult, _ := db.QuizResult.Query().
+		Where(quizresult.UserIDEQ(user.ID), quizresult.QuizIDEQ(quiz.ID)).
+		Only(ctx)
+	if existingResult != nil {
+		err := config.RequestErr(config.ERR_NOT_ALLOWED, "You have already done this quiz before")
+		return nil, &err
+	}
+	quizResult := db.QuizResult.Create().SetUserID(user.ID).SetQuizID(quiz.ID).SaveX(ctx)
+	return quizResult, nil
+}
+
+func (c CourseManager) SaveQuizResult(
+	db *ent.Client, ctx context.Context, user *ent.User, quiz *ent.Quiz, result *ent.QuizResult, data QuizSubmissionSchema,
+) (*ent.QuizResult, *config.ErrorResponse) {
+	// Prepare option IDs to batch fetch them
+	optionIDs := make([]uuid.UUID, 0, len(data.Answers))
+	for _, ans := range data.Answers {
+		optionIDs = append(optionIDs, ans.SelectedOptionID)
+	}
+
+	optionsMap := make(map[uuid.UUID]*ent.QuestionOption)
+	options := db.QuestionOption.Query().
+		Where(questionoption.IDIn(optionIDs...)).
+		AllX(ctx)
+	for _, opt := range options {
+		optionsMap[opt.ID] = opt
+	}
+
+	// Score calculation
+	total := len(data.Answers)
+	correct := 0
+	for _, ans := range data.Answers {
+		if opt, ok := optionsMap[ans.SelectedOptionID]; ok && opt.IsCorrect {
+			correct++
+		}
+	}
+	score := (float64(correct) / float64(total)) * 100
+
+	// Create QuizResult
+	quizResult := db.QuizResult.Create().
+		SetUser(user).
+		SetQuiz(quiz).
+		SetScore(score).
+		SetTimeTaken(data.TimeTaken).
+		SetCompletedAt(time.Now()).
+		SaveX(ctx)
+
+	// Batch create answers
+	bulk := make([]*ent.AnswerCreate, 0, total)
+	for _, ans := range data.Answers {
+		opt := optionsMap[ans.SelectedOptionID]
+		isCorrect := false
+		if opt != nil && opt.IsCorrect {
+			isCorrect = true
+		}
+		bulk = append(bulk, db.Answer.Create().
+			SetResult(quizResult).
+			SetQuestionID(ans.QuestionID).
+			SetSelectedOptionID(ans.SelectedOptionID).
+			SetIsCorrect(isCorrect),
+		)
+	}
+	db.Answer.CreateBulk(bulk...).ExecX(ctx)
+	return quizResult, nil
+}
+
+func (c CourseManager) GetQuizResult(
+	db *ent.Client, ctx context.Context, user *ent.User, quizID uuid.UUID,
+) *ent.QuizResult {
+	result, _ := db.QuizResult.Query().
+		Where(
+			quizresult.UserIDEQ(user.ID),
+			quizresult.QuizIDEQ(quizID),
+		).
+		WithAnswers().
+		Only(ctx)
+	return result
 }

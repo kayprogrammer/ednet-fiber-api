@@ -14,7 +14,7 @@ import (
 var cld *cloudinary.Cloudinary
 var err error
 
-func initializeCloudinary () Config {
+func initializeCloudinary() Config {
 	cfg := GetConfig()
 	// Initialize Cloudinary client
 	cld, err = cloudinary.NewFromParams(cfg.CloudinaryCloudName, cfg.CloudinaryApiKey, cfg.CloudinaryApiSecret)
@@ -94,8 +94,8 @@ func ValidateFile(c *fiber.Ctx, name string, required bool, isVideo bool) (*mult
 type FILE_FOLDER_CHOICES string
 
 const (
-	FF_AVATARS = "avatars"
-	FF_THUMBNAIL = "thumbnails"
-	FF_INTRO_VIDEOS = "intro_videos"
+	FF_AVATARS       = "avatars"
+	FF_THUMBNAIL     = "thumbnails"
+	FF_INTRO_VIDEOS  = "intro_videos"
 	FF_LESSON_VIDEOS = "lesson_videos"
 )

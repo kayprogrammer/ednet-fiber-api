@@ -67,6 +67,10 @@ func ForbiddenErr(message string) ErrorResponse {
 	return RequestErr(ERR_FORBIDDEN, message)
 }
 
+func ServerErr(message string) ErrorResponse {
+	return RequestErr(ERR_SERVER_ERROR, message)
+}
+
 func ValidationErr(field string, message string) ErrorResponse {
 	data := map[string]string{field: message}
 	return RequestErr(ERR_INVALID_ENTRY, "Invalid Entry", data)

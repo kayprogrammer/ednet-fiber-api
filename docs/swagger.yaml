@@ -251,6 +251,16 @@ definitions:
     - EnrollmentTypeOpen
     - EnrollmentTypeRestricted
     - EnrollmentTypeInviteOnly
+  courses.AnswerSchema:
+    properties:
+      question_id:
+        type: string
+      selected_option_id:
+        type: string
+    required:
+    - question_id
+    - selected_option_id
+    type: object
   courses.CategoryOrTagSchema:
     properties:
       name:
@@ -497,6 +507,8 @@ definitions:
     type: object
   courses.QuestionOptionSchema:
     properties:
+      id:
+        type: string
       is_correct:
         type: boolean
       text:
@@ -504,6 +516,8 @@ definitions:
     type: object
   courses.QuestionSchema:
     properties:
+      id:
+        type: string
       options:
         items:
           $ref: '#/definitions/courses.QuestionOptionSchema'
@@ -562,6 +576,49 @@ definitions:
         example: success
         type: string
     type: object
+  courses.QuizResultResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/courses.QuizResultSchema'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  courses.QuizResultSchema:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/courses.AnswerSchema'
+        type: array
+      completed_at:
+        type: string
+      id:
+        type: string
+      score:
+        type: number
+      started_at:
+        type: string
+      time_taken:
+        type: integer
+    type: object
+  courses.QuizSubmissionSchema:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/courses.SubmitAnswerSchema'
+        minItems: 1
+        type: array
+      time_taken:
+        description: in seconds
+        minimum: 1
+        type: integer
+    required:
+    - answers
+    - time_taken
+    type: object
   courses.QuizzesResponseSchema:
     properties:
       data:
@@ -572,6 +629,16 @@ definitions:
       status:
         example: success
         type: string
+    type: object
+  courses.SubmitAnswerSchema:
+    properties:
+      question_id:
+        type: string
+      selected_option_id:
+        type: string
+    required:
+    - question_id
+    - selected_option_id
     type: object
   enrollment.PaymentStatus:
     enum:
@@ -1160,34 +1227,6 @@ paths:
       summary: Retrieve Course Lessons
       tags:
       - Courses
-  /courses/lessons/{lesson_slug}/quizzes/{quiz_slug}:
-    get:
-      description: This endpoint retrieves the details of a particular quiz
-      parameters:
-      - description: Lesson Slug
-        in: path
-        name: lesson_slug
-        required: true
-        type: string
-      - description: Quiz Slug
-        in: path
-        name: quiz_slug
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/courses.QuizResponseSchema'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/base.NotFoundErrorExample'
-      security:
-      - BearerAuth: []
-      summary: Retrieve Quiz Details
-      tags:
-      - Courses
   /courses/lessons/{slug}/quizzes:
     get:
       description: This endpoint retrieves paginated responses of a lesson quizzes
@@ -1223,6 +1262,116 @@ paths:
       security:
       - BearerAuth: []
       summary: Retrieve Lesson Quizzes
+      tags:
+      - Courses
+  /courses/quizzes/{quiz_slug}:
+    get:
+      description: This endpoint retrieves the details of a particular quiz
+      parameters:
+      - description: Quiz Slug
+        in: path
+        name: quiz_slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.QuizResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Retrieve Quiz Details
+      tags:
+      - Courses
+  /courses/quizzes/{quiz_slug}/results:
+    get:
+      description: '`This endpoint retrieves the result of a particular quiz for a
+        user`'
+      parameters:
+      - description: Quiz Slug
+        in: path
+        name: quiz_slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.QuizResultResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Retrieve Quiz Result
+      tags:
+      - Courses
+    post:
+      description: '`This endpoint allows a user to submit their answers for a quiz`'
+      parameters:
+      - description: Quiz Slug
+        in: path
+        name: quiz_slug
+        required: true
+        type: string
+      - description: Submission object
+        in: body
+        name: result
+        required: true
+        schema:
+          $ref: '#/definitions/courses.QuizSubmissionSchema'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.QuizResultResponseSchema'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.InvalidErrorExample'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Submit Quiz
+      tags:
+      - Courses
+  /courses/quizzes/{quiz_slug}/start:
+    get:
+      description: '`This endpoint allows a user to start a quiz`'
+      parameters:
+      - description: Quiz Slug
+        in: path
+        name: quiz_slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.ResponseSchema'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.InvalidErrorExample'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Start Quiz
       tags:
       - Courses
   /general/site-detail:

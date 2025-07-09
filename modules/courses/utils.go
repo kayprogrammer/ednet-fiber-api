@@ -49,9 +49,9 @@ func GetCurrentOrigin(c *fiber.Ctx) string {
 	return origin
 }
 
-func CreateCheckoutSession (cfg config.Config, course *ent.Course, successUrl string, cancelUrl string) (*string, *config.ErrorResponse) {
+func CreateCheckoutSession(cfg config.Config, course *ent.Course, successUrl string, cancelUrl string) (*string, *config.ErrorResponse) {
 	stripe.Key = cfg.StripeSecretKey
-	
+
 	price := course.DiscountPrice
 	if price == 0.0 {
 		price = course.Price

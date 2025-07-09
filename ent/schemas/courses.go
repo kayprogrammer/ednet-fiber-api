@@ -1,6 +1,7 @@
 package schemas
 
 import (
+	"time"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -210,6 +211,7 @@ func (Quiz) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("lesson", Lesson.Type).Ref("quizzes").Field("lesson_id").Unique().Required(),
 		edge.To("questions", Question.Type),
+		edge.To("results", QuizResult.Type),
 	}
 }
 
@@ -233,6 +235,7 @@ func (Question) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("quiz", Quiz.Type).Ref("questions").Field("quiz_id").Unique().Required(),
 		edge.To("options", QuestionOption.Type),
+		edge.To("answers", Answer.Type),
 	}
 }
 
@@ -255,5 +258,63 @@ func (QuestionOption) Fields() []ent.Field {
 func (QuestionOption) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("question", Question.Type).Ref("options").Field("question_id").Unique().Required(),
+		edge.To("answers", Answer.Type),
+	}
+}
+
+// QuizResult schema.
+type QuizResult struct {
+	ent.Schema
+}
+
+// Fields of the QuizResult.
+func (QuizResult) Fields() []ent.Field {
+	return append(
+		CommonFields,
+		field.UUID("user_id", uuid.UUID{}),
+		field.UUID("quiz_id", uuid.UUID{}),
+
+		field.Float("score").Min(0).Max(100).Default(0),
+		field.Int("time_taken").Default(0), // in seconds
+
+		field.Time("started_at").Optional().Default(time.Now),
+		field.Time("completed_at").Optional(),
+	)
+}
+
+// Edges of the QuizResult.
+func (QuizResult) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.From("user", User.Type).Ref("quiz_results").Field("user_id").Unique().Required(),
+		edge.From("quiz", Quiz.Type).Ref("results").Field("quiz_id").Unique().Required(),
+		edge.To("answers", Answer.Type),
+	}
+}
+
+
+
+// Answer schema.
+type Answer struct {
+	ent.Schema
+}
+
+// Fields of the Answer.
+func (Answer) Fields() []ent.Field {
+	return append(
+		CommonFields,
+		field.UUID("result_id", uuid.UUID{}),
+		field.UUID("question_id", uuid.UUID{}),
+		field.UUID("selected_option_id", uuid.UUID{}),
+
+		field.Bool("is_correct").Default(false),
+	)
+}
+
+// Edges of the Answer.
+func (Answer) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.From("result", QuizResult.Type).Ref("answers").Field("result_id").Unique().Required(),
+		edge.From("question", Question.Type).Ref("answers").Field("question_id").Unique().Required(),
+		edge.From("selected_option", QuestionOption.Type).Ref("answers").Field("selected_option_id").Unique().Required(),
 	}
 }

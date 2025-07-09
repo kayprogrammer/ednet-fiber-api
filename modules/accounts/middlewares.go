@@ -24,7 +24,7 @@ func GetUser(db *ent.Client, ctx context.Context, token string) (*ent.User, *str
 }
 
 func AuthMiddleware(db *ent.Client, allowedRoleParam ...user.Role) fiber.Handler {
-	return func (c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
 		token := c.Get("Authorization")
 		if len(token) < 1 {
 			return config.APIError(c, 401, config.RequestErr(config.ERR_UNAUTHORIZED_USER, "Unauthorized User!"))

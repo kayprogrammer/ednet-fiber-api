@@ -26,8 +26,8 @@ func PaginateModel[T any, Q interface {
 	ctx := c.Context()
 
 	// Parse query parameters
-	page := c.QueryInt("page", 1)      // Default to page 1
-	limit := c.QueryInt("limit", 100)  // Default to 100 items per page
+	page := c.QueryInt("page", 1)     // Default to page 1
+	limit := c.QueryInt("limit", 100) // Default to 100 items per page
 	if page < 1 {
 		page = 1
 	}
@@ -59,10 +59,10 @@ func PaginateModel[T any, Q interface {
 
 	// Return paginated response
 	return &PaginationResponse[T]{
-		Items:        items,
-		Page:         page,
-		ItemsCount:   itemsCount,
-		TotalPages:   totalPages,
-		Limit: limit,
+		Items:      items,
+		Page:       page,
+		ItemsCount: itemsCount,
+		TotalPages: totalPages,
+		Limit:      limit,
 	}
 }
