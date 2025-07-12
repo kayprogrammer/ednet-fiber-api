@@ -1,6 +1,8 @@
 package profiles
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
@@ -94,5 +96,45 @@ func GetEnrolledCourses(db *ent.Client) fiber.Handler {
 			ResponseSchema: base.ResponseMessage("Courses Fetched Successfully"),
 		}.Assign(coursesData)
 		return c.Status(200).JSON(response)
+	}
+}
+
+
+// @Summary Create/Update Lesson Progress
+// @Description `This endpoint allows a user to create or update a lesson progress`
+// @Tags Profiles
+// @Param slug path string true "Lesson Slug"
+// @Param lesson_progress body LessonProgressInputSchema true "Lesson Progress object"
+// @Success 201 {object} LessonProgressResponseSchema
+// @Failure 422 {object} base.ValidationErrorExample
+// @Failure 404 {object} base.NotFoundErrorExample
+// @Failure 401 {object} base.UnauthorizedErrorExample
+// @Router /profiles/lessons/{slug}/progress [post]
+// @Security BearerAuth
+func CreateOrUpdateLessonProgress(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user := base.RequestUser(c)
+		ctx := c.Context()
+		data := LessonProgressInputSchema{}
+		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+
+		lesson := courseManager.GetCourseLessonBySlug(db, ctx, c.Params("slug"), nil, true)
+		if lesson == nil {
+			return config.APIError(c, 404, config.NotFoundErr( "Lesson not found"))
+		}
+
+		enrollment := courseManager.GetExistentEnrollmentByUserAndCourse(db, ctx, user, lesson.Edges.Course, false)
+		if enrollment == nil {
+			return config.APIError(c, 403, config.RequestErr(config.ERR_NOT_ALLOWED, "You are not enrolled in this course"))
+		}
+
+		lessonProgress, message := profileManager.CreateOrUpdateLessonProgress(db, ctx, user, lesson, data.IsCompleted)
+		response := LessonProgressResponseSchema{
+			ResponseSchema: base.ResponseMessage(fmt.Sprintf("Lesson progress %s successfully", message)),
+			Data: LessonProgressResponseData{}.Assign(lessonProgress),
+		}
+		return c.Status(201).JSON(response)
 	}
 }

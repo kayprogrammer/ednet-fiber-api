@@ -41,6 +41,7 @@ func (User) Edges() []ent.Edge {
 		edge.To("reviews", Review.Type).Annotations(entsql.OnDelete(entsql.SetNull)),
 		edge.To("payments", Payment.Type).Annotations(entsql.OnDelete(entsql.SetNull)),
 		edge.To("quiz_results", QuizResult.Type).Annotations(entsql.OnDelete(entsql.SetNull)),
+        edge.To("progress", LessonProgress.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 	}
 }
 

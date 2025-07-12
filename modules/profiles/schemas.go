@@ -3,6 +3,7 @@ package profiles
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/base"
@@ -39,4 +40,24 @@ type ProfileUpdateSchema struct {
 	Username string  `form:"username" validate:"required,max=50,min=2" example:"john-doe"`
 	Bio      *string `form:"bio" validate:"omitempty,max=300,min=10" example:"I'm the boss"`
 	Dob      *string `form:"dob" validate:"omitempty,datetime=2006-01-02" example:"2000-09-12"`
+}
+
+type LessonProgressInputSchema struct {
+	IsCompleted bool `json:"is_completed"`
+}
+
+type LessonProgressResponseData struct {
+	ID          uuid.UUID  `json:"id"`
+	CompletedAt *time.Time `json:"completed_at"`
+}
+
+func (l LessonProgressResponseData) Assign(lessonProgress *ent.LessonProgress) LessonProgressResponseData {
+	l.ID = lessonProgress.ID
+	l.CompletedAt = &lessonProgress.CompletedAt
+	return l
+}
+
+type LessonProgressResponseSchema struct {
+	base.ResponseSchema
+	Data LessonProgressResponseData `json:"data"`
 }

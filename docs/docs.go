@@ -2024,6 +2024,64 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/profiles/lessons/{slug}/progress": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "` + "`" + `This endpoint allows a user to create or update a lesson progress` + "`" + `",
+                "tags": [
+                    "Profiles"
+                ],
+                "summary": "Create/Update Lesson Progress",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lesson Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Lesson Progress object",
+                        "name": "lesson_progress",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/profiles.LessonProgressInputSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.LessonProgressResponseSchema"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/base.UnauthorizedErrorExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -3073,6 +3131,41 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 10
+                }
+            }
+        },
+        "profiles.LessonProgressInputSchema": {
+            "type": "object",
+            "properties": {
+                "is_completed": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "profiles.LessonProgressResponseData": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "profiles.LessonProgressResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/profiles.LessonProgressResponseData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },

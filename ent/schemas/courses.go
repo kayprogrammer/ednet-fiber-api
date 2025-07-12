@@ -121,6 +121,37 @@ func (Lesson) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("course", Course.Type).Ref("lessons").Field("course_id").Unique().Required(),
 		edge.To("quizzes", Quiz.Type),
+		edge.To("progress", LessonProgress.Type),
+	}
+}
+
+// LessonProgress schema.
+type LessonProgress struct {
+	ent.Schema
+}
+
+// Fields of the LessonProgress.
+func (LessonProgress) Fields() []ent.Field {
+	return append(
+		CommonFields,
+		field.UUID("user_id", uuid.UUID{}),
+		field.UUID("lesson_id", uuid.UUID{}),
+		field.Time("completed_at").Optional(),
+	)
+}
+
+// Edges of the LessonProgress.
+func (LessonProgress) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.From("user", User.Type).Ref("progress").Field("user_id").Unique().Required(),
+		edge.From("lesson", Lesson.Type).Ref("progress").Field("lesson_id").Unique().Required(),
+	}
+}
+
+func (LessonProgress) Indexes() []ent.Index {
+	return []ent.Index{
+		// Unique constraint on user_id + lesson_id to prevent duplicate progress entries
+		index.Fields("user_id", "lesson_id").Unique(),
 	}
 }
 
@@ -305,7 +336,6 @@ func (Answer) Fields() []ent.Field {
 		field.UUID("result_id", uuid.UUID{}),
 		field.UUID("question_id", uuid.UUID{}),
 		field.UUID("selected_option_id", uuid.UUID{}),
-
 		field.Bool("is_correct").Default(false),
 	)
 }

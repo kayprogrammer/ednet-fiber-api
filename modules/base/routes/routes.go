@@ -41,6 +41,7 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 	profilesRouter.Get("", accounts.AuthMiddleware(db), profiles.GetProfile(db))
 	profilesRouter.Put("", accounts.AuthMiddleware(db), profiles.UpdateProfile(db))
 	profilesRouter.Get("/courses", accounts.AuthMiddleware(db), profiles.GetEnrolledCourses(db))
+	profilesRouter.Post("/lessons", accounts.AuthMiddleware(db), profiles.CreateOrUpdateLessonProgress(db))
 
 	// Courses Routes (2)
 	coursesRouter := api.Group("/courses")

@@ -731,6 +731,29 @@ definitions:
     - questions
     - title
     type: object
+  profiles.LessonProgressInputSchema:
+    properties:
+      is_completed:
+        type: boolean
+    type: object
+  profiles.LessonProgressResponseData:
+    properties:
+      completed_at:
+        type: string
+      id:
+        type: string
+    type: object
+  profiles.LessonProgressResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/profiles.LessonProgressResponseData'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
   profiles.ProfileResponseSchema:
     properties:
       data:
@@ -2138,6 +2161,43 @@ paths:
       security:
       - BearerAuth: []
       summary: Get Your Enrolled Courses
+      tags:
+      - Profiles
+  /profiles/lessons/{slug}/progress:
+    post:
+      description: '`This endpoint allows a user to create or update a lesson progress`'
+      parameters:
+      - description: Lesson Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Lesson Progress object
+        in: body
+        name: lesson_progress
+        required: true
+        schema:
+          $ref: '#/definitions/profiles.LessonProgressInputSchema'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/profiles.LessonProgressResponseSchema'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.UnauthorizedErrorExample'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Create/Update Lesson Progress
       tags:
       - Profiles
 produces:
