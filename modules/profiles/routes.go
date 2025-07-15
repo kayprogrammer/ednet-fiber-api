@@ -99,7 +99,6 @@ func GetEnrolledCourses(db *ent.Client) fiber.Handler {
 	}
 }
 
-
 // @Summary Create/Update Lesson Progress
 // @Description `This endpoint allows a user to create or update a lesson progress`
 // @Tags Profiles
@@ -122,18 +121,85 @@ func CreateOrUpdateLessonProgress(db *ent.Client) fiber.Handler {
 
 		lesson := courseManager.GetCourseLessonBySlug(db, ctx, c.Params("slug"), nil, true)
 		if lesson == nil {
-			return config.APIError(c, 404, config.NotFoundErr( "Lesson not found"))
+			return config.APIError(c, 404, config.NotFoundErr("Lesson not found"))
 		}
 
 		enrollment := courseManager.GetExistentEnrollmentByUserAndCourse(db, ctx, user, lesson.Edges.Course, false)
 		if enrollment == nil {
-			return config.APIError(c, 403, config.RequestErr(config.ERR_NOT_ALLOWED, "You are not enrolled in this course"))
+			return config.APIError(c, 403, config.RequestErr(config.ERR_NOT_ALLOWED, "You are not enrolled in this lesson"))
 		}
 
 		lessonProgress, message := profileManager.CreateOrUpdateLessonProgress(db, ctx, user, lesson, data.IsCompleted)
 		response := LessonProgressResponseSchema{
 			ResponseSchema: base.ResponseMessage(fmt.Sprintf("Lesson progress %s successfully", message)),
-			Data: LessonProgressResponseData{}.Assign(lessonProgress),
+			Data:           LessonProgressResponseData{}.Assign(lessonProgress),
+		}
+		return c.Status(201).JSON(response)
+	}
+}
+
+// @Summary Get Lesson Progress
+// @Description `This endpoint allows a user to get his/her lesson progress`
+// @Tags Profiles
+// @Param slug path string true "Lesson Slug"
+// @Success 200 {object} LessonProgressResponseSchema
+// @Failure 404 {object} base.NotFoundErrorExample
+// @Failure 401 {object} base.UnauthorizedErrorExample
+// @Router /profiles/lessons/{slug}/progress [get]
+// @Security BearerAuth
+func GetLessonProgress(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user := base.RequestUser(c)
+		ctx := c.Context()
+		lesson := courseManager.GetCourseLessonBySlug(db, ctx, c.Params("slug"), nil, true)
+		if lesson == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Lesson not found"))
+		}
+
+		enrollment := courseManager.GetExistentEnrollmentByUserAndCourse(db, ctx, user, lesson.Edges.Course, false)
+		if enrollment == nil {
+			return config.APIError(c, 403, config.RequestErr(config.ERR_NOT_ALLOWED, "You are not enrolled in this lesson"))
+		}
+
+		lessonProgress := profileManager.GetLessonProgress(db, ctx, user, lesson.ID)
+		if lessonProgress == nil {
+			return config.APIError(c, 404, config.NotFoundErr("No progress recorded for this lesson"))
+		}
+		response := LessonProgressResponseSchema{
+			ResponseSchema: base.ResponseMessage("Lesson progress fetched successfully"),
+			Data:           LessonProgressResponseData{}.Assign(lessonProgress),
+		}
+		return c.Status(201).JSON(response)
+	}
+}
+
+// @Summary Get Course Progress
+// @Description `This endpoint allows a user to get his/her course progress`
+// @Tags Profiles
+// @Param slug path string true "Course Slug"
+// @Success 200 {object} CourseProgressResponseSchema
+// @Failure 404 {object} base.NotFoundErrorExample
+// @Failure 401 {object} base.UnauthorizedErrorExample
+// @Router /profiles/courses/{slug}/progress [get]
+// @Security BearerAuth
+func GetCourseProgress(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user := base.RequestUser(c)
+		ctx := c.Context()
+		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), nil, false)
+		if course == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Course not found"))
+		}
+
+		enrollment := courseManager.GetExistentEnrollmentByUserAndCourse(db, ctx, user, course, false)
+		if enrollment == nil {
+			return config.APIError(c, 403, config.RequestErr(config.ERR_NOT_ALLOWED, "You are not enrolled in this course"))
+		}
+
+		courseProgressPercentage := profileManager.GetCourseProgress(db, ctx, user, course)
+		response := CourseProgressResponseSchema{
+			ResponseSchema: base.ResponseMessage("Course progress fetched successfully"),
+			Data:           CourseProgressResponseData{Percentage: courseProgressPercentage},
 		}
 		return c.Status(201).JSON(response)
 	}

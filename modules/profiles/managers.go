@@ -2,6 +2,7 @@ package profiles
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,6 +11,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/course"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/enrollment"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/lesson"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/lessonprogress"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/predicate"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
@@ -98,4 +100,27 @@ func (p ProfileManager) GetLessonProgress(db *ent.Client, ctx context.Context, u
 			lessonprogress.LessonID(lessonId),
 		).Only(ctx)
 	return lessonProgress
+}
+
+func (p ProfileManager) GetCourseProgress(
+	db *ent.Client,
+	ctx context.Context,
+	user *ent.User,
+	courseObj *ent.Course,
+) float64 {
+	lessonProgressCount := db.LessonProgress.Query().
+		Where(
+			lessonprogress.UserID(user.ID),
+			lessonprogress.CompletedAtNotNil(),
+			lessonprogress.HasLessonWith(lesson.CourseIDEQ(courseObj.ID)),
+		).CountX(ctx)
+
+	lessonsCount := courseObj.QueryLessons().CountX(ctx)
+
+	if lessonsCount == 0 {
+		return 0
+	}
+	percentage := (float64(lessonProgressCount) / float64(lessonsCount)) * 100
+	rounded := math.Round(percentage*100) / 100
+	return rounded
 }

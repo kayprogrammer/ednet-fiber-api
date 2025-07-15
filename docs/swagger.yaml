@@ -731,6 +731,22 @@ definitions:
     - questions
     - title
     type: object
+  profiles.CourseProgressResponseData:
+    properties:
+      percentage:
+        type: number
+    type: object
+  profiles.CourseProgressResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/profiles.CourseProgressResponseData'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
   profiles.LessonProgressInputSchema:
     properties:
       is_completed:
@@ -2163,7 +2179,60 @@ paths:
       summary: Get Your Enrolled Courses
       tags:
       - Profiles
+  /profiles/courses/{slug}/progress:
+    get:
+      description: '`This endpoint allows a user to get his/her course progress`'
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/profiles.CourseProgressResponseSchema'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.UnauthorizedErrorExample'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Get Course Progress
+      tags:
+      - Profiles
   /profiles/lessons/{slug}/progress:
+    get:
+      description: '`This endpoint allows a user to get his/her lesson progress`'
+      parameters:
+      - description: Lesson Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/profiles.LessonProgressResponseSchema'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.UnauthorizedErrorExample'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Get Lesson Progress
+      tags:
+      - Profiles
     post:
       description: '`This endpoint allows a user to create or update a lesson progress`'
       parameters:

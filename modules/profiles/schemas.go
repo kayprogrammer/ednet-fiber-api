@@ -61,3 +61,12 @@ type LessonProgressResponseSchema struct {
 	base.ResponseSchema
 	Data LessonProgressResponseData `json:"data"`
 }
+
+type CourseProgressResponseData struct {
+	Percentage float64 `json:"percentage"`
+}
+
+type CourseProgressResponseSchema struct {
+	base.ResponseSchema
+	Data CourseProgressResponseData `json:"data"`
+}
