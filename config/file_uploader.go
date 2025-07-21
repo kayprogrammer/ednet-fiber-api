@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"mime/multipart"
@@ -48,6 +49,27 @@ func UploadFile(file *multipart.FileHeader, folder string) string {
 	}
 
 	// Return the secure URL of the uploaded file
+	return uploadResult.SecureURL
+}
+
+func UploadGeneratedCert(buf *bytes.Buffer, filename string) string {
+	cfg := initializeCloudinary()
+	if cfg.Environment == "test" {
+		return "https://testfile.com"
+	}
+
+	fullFolder := fmt.Sprintf("%s/%s", cfg.Environment, "certs")
+
+	uploadResult, err := cld.Upload.Upload(context.Background(), buf, uploader.UploadParams{
+		Folder:   fullFolder,
+		PublicID: filename,
+		Format:   "png",
+	})
+	if err != nil {
+		fmt.Println("failed to upload to Cloudinary: %w", err)
+		return ""
+	}
+
 	return uploadResult.SecureURL
 }
 
