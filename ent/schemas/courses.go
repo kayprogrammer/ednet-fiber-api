@@ -170,6 +170,7 @@ func (Enrollment) Fields() []ent.Field {
 		field.Enum("payment_status").Values("successful", "cancelled", "pending", "failed").Default("pending"),
 		field.String("checkout_url"),
 		field.Int("progress").Default(0), // Percentage (0-100)
+		field.String("cert").Optional(),
 	)
 }
 

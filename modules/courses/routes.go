@@ -242,6 +242,7 @@ func StartQuiz(db *ent.Client) fiber.Handler {
 
 // @Summary Submit Quiz
 // @Description `This endpoint allows a user to submit their answers for a quiz`
+// @Description `If this submission is for the last quiz in the course, a certificate will be generated`
 // @Tags Courses
 // @Param quiz_slug path string true "Quiz Slug"
 // @Param result body QuizSubmissionSchema true "Submission object"
@@ -274,7 +275,11 @@ func SubmitQuizResult(db *ent.Client) fiber.Handler {
 		if err != nil {
 			return config.APIError(c, 400, *err)
 		}
-
+		// Generate cert if this is the last quiz in the course
+		if courseManager.IsLastQuizInCourse(db, ctx, quiz) {
+			courseManager.GenerateCertificate(db, ctx, user, quiz.Edges.Lesson.QueryCourse().OnlyX(ctx))
+		}
+		
 		response := QuizResultResponseSchema{
 			ResponseSchema: base.ResponseMessage("Quiz Submitted Successfully"),
 			Data:           QuizResultSchema{}.Assign(quizResult),

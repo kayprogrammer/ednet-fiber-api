@@ -1,11 +1,11 @@
 package courses
 
 import (
-	"time"
 	"context"
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/gofiber/fiber/v2"
@@ -21,6 +21,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/ent/quizresult"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/review"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
+	"github.com/kayprogrammer/ednet-fiber-api/modules/courses/certs"
 )
 
 type CourseManager struct{}
@@ -367,4 +368,23 @@ func (c CourseManager) GetQuizResult(
 		WithAnswers().
 		Only(ctx)
 	return result
+}
+
+func (c CourseManager) IsLastQuizInCourse(db *ent.Client, ctx context.Context, quizObj *ent.Quiz) bool {
+	currentLesson := quizObj.Edges.Lesson
+	courseID := currentLesson.CourseID
+
+	lastQuiz := db.Quiz.Query().
+		Where(
+			quiz.HasLessonWith(lesson.CourseID(courseID)),
+		).Order(ent.Desc(quiz.FieldCreatedAt)).
+		FirstX(ctx)
+	return quizObj.ID == lastQuiz.ID
+}
+
+func (c CourseManager) GenerateCertificate(db *ent.Client, ctx context.Context, user *ent.User, course *ent.Course) {
+	cert := certs.GenerateCertificate(user, course, course.Edges.Instructor.Name)
+	db.Enrollment.Update().Where(enrollment.CourseID(course.ID), enrollment.UserID(user.ID)).
+		SetCert(cert).
+		SaveX(ctx)
 }
