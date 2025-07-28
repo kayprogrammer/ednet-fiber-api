@@ -60,6 +60,7 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 	coursesRouter.Get("/quizzes/:quiz_slug/start", accounts.AuthMiddleware(db), courses.StartQuiz(db))
 	coursesRouter.Get("/quizzes/:quiz_slug/results", accounts.AuthMiddleware(db), courses.GetQuizResult(db))
 	coursesRouter.Post("/quizzes/:quiz_slug/results", accounts.AuthMiddleware(db), courses.SubmitQuizResult(db))
+	coursesRouter.Post("/webhook/stripe", courses.StripeWebhook(db, cfg))
 
 
 	// Instructor Routes (15)

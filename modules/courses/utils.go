@@ -49,14 +49,16 @@ func GetCurrentOrigin(c *fiber.Ctx) string {
 	return origin
 }
 
-func CreateCheckoutSession(cfg config.Config, course *ent.Course, successUrl string, cancelUrl string) (*string, *config.ErrorResponse) {
+func CreateCheckoutSession(cfg config.Config, course *ent.Course, successUrl string, cancelUrl string, enrollmentObj *ent.Enrollment) (*string, *config.ErrorResponse) {
 	stripe.Key = cfg.StripeSecretKey
 
 	price := course.DiscountPrice
 	if price == 0.0 {
 		price = course.Price
 	}
+	log.Println(price)
 	params := &stripe.CheckoutSessionParams{
+		ClientReferenceID: stripe.String(enrollmentObj.ID.String()),
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
 		Mode:               stripe.String("payment"),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
@@ -65,8 +67,10 @@ func CreateCheckoutSession(cfg config.Config, course *ent.Course, successUrl str
 					Currency: stripe.String("usd"),
 					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
 						Name: stripe.String(course.Title),
+						Description: stripe.String(course.Desc),
+						Images: stripe.StringSlice([]string{course.ThumbnailURL}),
 					},
-					UnitAmount: stripe.Int64(int64(price)), // e.g., 5000 = $50.00
+					UnitAmount: stripe.Int64(int64(price * 100)), // e.g., 5000 = $50.00
 				},
 				Quantity: stripe.Int64(1),
 			},

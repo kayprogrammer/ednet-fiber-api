@@ -170,7 +170,7 @@ func GetLessonProgress(db *ent.Client) fiber.Handler {
 			ResponseSchema: base.ResponseMessage("Lesson progress fetched successfully"),
 			Data:           LessonProgressResponseData{}.Assign(lessonProgress),
 		}
-		return c.Status(201).JSON(response)
+		return c.Status(200).JSON(response)
 	}
 }
 
@@ -202,7 +202,7 @@ func GetCourseProgress(db *ent.Client) fiber.Handler {
 			ResponseSchema: base.ResponseMessage("Course progress fetched successfully"),
 			Data:           CourseProgressResponseData{Percentage: courseProgressPercentage},
 		}
-		return c.Status(201).JSON(response)
+		return c.Status(200).JSON(response)
 	}
 }
 

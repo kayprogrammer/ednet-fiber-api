@@ -3,6 +3,7 @@ package courses
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -252,17 +253,16 @@ func (c CourseManager) GetExistentEnrollmentByUserAndCourse(db *ent.Client, ctx 
 	return enrollmentObj
 }
 
-func (c CourseManager) CreateEnrollment(db *ent.Client, ctx context.Context, user *ent.User, course *ent.Course, checkoutUrl string) (*ent.Enrollment, *config.ErrorResponse) {
+func (c CourseManager) CreateEnrollment(db *ent.Client, ctx context.Context, user *ent.User, course *ent.Course) (*ent.Enrollment, *config.ErrorResponse) {
 	existentEnrollment := c.GetExistentEnrollmentByUserAndCourse(db, ctx, user, course, false)
 	if existentEnrollment != nil {
 		err := config.RequestErr(config.ERR_NOT_ALLOWED, "Enrollment has been created already")
 		return nil, &err
 	}
-	enrollmentQuery := db.Enrollment.
+			enrollmentQuery := db.Enrollment.
 		Create().
 		SetCourse(course).
-		SetUser(user).
-		SetCheckoutURL(checkoutUrl)
+		SetUser(user)
 
 	if course.IsFree {
 		enrollmentQuery = enrollmentQuery.SetStatus(enrollment.StatusActive).
@@ -272,6 +272,19 @@ func (c CourseManager) CreateEnrollment(db *ent.Client, ctx context.Context, use
 	enrollmentObj.Edges.User = user
 	enrollmentObj.Edges.Course = course
 	return enrollmentObj, nil
+}
+
+func (c CourseManager) UpdateEnrollment(db *ent.Client, ctx context.Context, enrollmentID uuid.UUID, paymentStatus enrollment.PaymentStatus) {
+	enrollmentObj, err := db.Enrollment.Query().Where(enrollment.ID(enrollmentID)).Only(ctx)
+	if err != nil {
+		log.Printf("Error fetching enrollment: %v", err)
+		return
+	}
+	enrollmentStatus := enrollment.StatusInactive
+	if paymentStatus == enrollment.PaymentStatusSuccessful {
+		enrollmentStatus = enrollment.StatusActive
+	}
+	enrollmentObj.Update().SetPaymentStatus(paymentStatus).SetStatus(enrollment.Status(enrollmentStatus)).SaveX(ctx)
 }
 
 func (c CourseManager) GetAverageRating(reviews []*ent.Review) float64 {

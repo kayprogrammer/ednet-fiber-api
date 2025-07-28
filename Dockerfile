@@ -1,4 +1,4 @@
-FROM golang:1.20-alpine
+FROM golang:1.24-alpine
 
 RUN mkdir build
 
@@ -9,5 +9,4 @@ COPY ./.env .
 COPY go.mod go.sum ./
 
 # Download dependencies
-RUN go install github.com/cosmtrek/air@latest
 RUN go mod download

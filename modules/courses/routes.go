@@ -133,14 +133,17 @@ func EnrollForACourse(db *ent.Client, cfg config.Config) fiber.Handler {
 			return config.APIError(c, *errCode, *errData)
 		}
 
-		checkoutUrl, err := CreateCheckoutSession(cfg, course, data.SuccessUrl, data.CancelUrl)
-		if err != nil {
-			return config.APIError(c, 500, *err)
-		}
-		enrollment, err := courseManager.CreateEnrollment(db, ctx, user, course, *checkoutUrl)
+		enrollment, err := courseManager.CreateEnrollment(db, ctx, user, course)
 		if err != nil {
 			return config.APIError(c, 400, *err)
 		}
+
+		checkoutUrl, err := CreateCheckoutSession(cfg, course, data.SuccessUrl, data.CancelUrl, enrollment)
+		if err != nil {
+			return config.APIError(c, 500, *err)
+		}
+		enrollment.Update().SetCheckoutURL(*checkoutUrl).SaveX(ctx)
+		enrollment.CheckoutURL = *checkoutUrl
 
 		response := EnrollmentResponseSchema{
 			ResponseSchema: base.ResponseMessage("Enrollment Created Successfully"),
