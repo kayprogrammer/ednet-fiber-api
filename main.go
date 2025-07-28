@@ -47,10 +47,10 @@ func main() {
 	seeding.CreateInitialData(db, ctx, cfg)
 
 	app := fiber.New(fiber.Config{
-		BodyLimit: 15 * 1024 * 1024, // 15MB
+		BodyLimit: 10 * 1024 * 1024, // 15MB
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if err == fiber.ErrRequestEntityTooLarge {
-				return config.APIError(c, fiber.StatusRequestEntityTooLarge, config.ServerErr("Request body is too large. Maximum allowed size is 15MB."))
+				return config.APIError(c, fiber.StatusRequestEntityTooLarge, config.ServerErr("Request body is too large. Maximum allowed size is 10MB."))
 			}
 			// Default error handler
 			code := fiber.StatusInternalServerError

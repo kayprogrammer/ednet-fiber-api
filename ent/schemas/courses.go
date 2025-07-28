@@ -168,7 +168,7 @@ func (Enrollment) Fields() []ent.Field {
 		field.UUID("course_id", uuid.UUID{}),
 		field.Enum("status").Values("inactive", "active", "completed", "dropped").Default("inactive"),
 		field.Enum("payment_status").Values("successful", "cancelled", "pending", "failed").Default("pending"),
-		field.String("checkout_url"),
+		field.String("checkout_url").Optional(),
 		field.Int("progress").Default(0), // Percentage (0-100)
 		field.String("cert").Optional(),
 	)
@@ -310,7 +310,7 @@ func (QuizResult) Fields() []ent.Field {
 		field.Int("time_taken").Default(0), // in seconds
 
 		field.Time("started_at").Optional().Default(time.Now),
-		field.Time("completed_at").Optional(),
+		field.Time("completed_at").Optional().Nillable(),
 	)
 }
 

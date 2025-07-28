@@ -2115,6 +2115,28 @@ const docTemplate = `{
                 }
             }
         },
+        "/profiles/leaderboard": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "` + "`" + `This endpoint retrieves the top 100 students by quiz score.` + "`" + `",
+                "tags": [
+                    "Profiles"
+                ],
+                "summary": "Get Leaderboard",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.LeaderboardResponseSchema"
+                        }
+                    }
+                }
+            }
+        },
         "/profiles/lessons/{slug}/progress": {
             "get": {
                 "security": [
@@ -3308,6 +3330,42 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/profiles.CourseProgressResponseData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "profiles.LeaderboardEntry": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "total_score": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "profiles.LeaderboardResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/profiles.LeaderboardEntry"
+                    }
                 },
                 "message": {
                     "type": "string",

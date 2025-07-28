@@ -273,13 +273,18 @@ func SubmitQuizResult(db *ent.Client) fiber.Handler {
 			return config.APIError(c, *errCode, *errData)
 		}
 
+		if quizResult.CompletedAt != nil {
+			return config.APIError(c, 400, config.RequestErr(config.ERR_NOT_ALLOWED, "You have already submitted this quiz"))
+		}
+
 		quizResult, err := courseManager.SaveQuizResult(db, ctx, user, quiz, quizResult, data)
 		if err != nil {
 			return config.APIError(c, 400, *err)
 		}
+
 		// Generate cert if this is the last quiz in the course
 		if courseManager.IsLastQuizInCourse(db, ctx, quiz) {
-			courseManager.GenerateCertificate(db, ctx, user, quiz.Edges.Lesson.QueryCourse().OnlyX(ctx))
+			courseManager.GenerateCertificate(db, ctx, user, quiz.Edges.Lesson.QueryCourse().WithInstructor().OnlyX(ctx))
 		}
 		
 		response := QuizResultResponseSchema{

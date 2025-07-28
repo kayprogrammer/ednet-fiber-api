@@ -235,9 +235,10 @@ func (q QuizDetailSchema) Assign(quiz *ent.Quiz) QuizDetailSchema {
 	for _, question := range questions {
 		parsedOptions := make([]QuestionOptionSchema, 0)
 		for _, option := range question.Edges.Options {
-			parsedOptions = append(parsedOptions, QuestionOptionSchema{Text: option.Text, IsCorrect: option.IsCorrect})
+			parsedOptions = append(parsedOptions, QuestionOptionSchema{ID: option.ID, Text: option.Text, IsCorrect: option.IsCorrect})
 		}
 		parsedQuestions = append(parsedQuestions, QuestionSchema{
+			ID: question.ID,
 			Text:    question.Text,
 			Order:   question.Order,
 			Options: parsedOptions,
@@ -309,7 +310,7 @@ type QuizResultSchema struct {
 	Score       float64        `json:"score"`
 	TimeTaken   int            `json:"time_taken"`
 	StartedAt   time.Time      `json:"started_at"`
-	CompletedAt time.Time      `json:"completed_at"`
+	CompletedAt *time.Time      `json:"completed_at"`
 	Answers     []AnswerSchema `json:"answers"`
 }
 

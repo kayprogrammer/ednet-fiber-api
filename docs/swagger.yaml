@@ -767,6 +767,30 @@ definitions:
         example: success
         type: string
     type: object
+  profiles.LeaderboardEntry:
+    properties:
+      name:
+        type: string
+      total_score:
+        type: integer
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+  profiles.LeaderboardResponseSchema:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/profiles.LeaderboardEntry'
+        type: array
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
   profiles.LessonProgressInputSchema:
     properties:
       is_completed:
@@ -2257,6 +2281,19 @@ paths:
       security:
       - BearerAuth: []
       summary: Get Course Progress
+      tags:
+      - Profiles
+  /profiles/leaderboard:
+    get:
+      description: '`This endpoint retrieves the top 100 students by quiz score.`'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/profiles.LeaderboardResponseSchema'
+      security:
+      - BearerAuth: []
+      summary: Get Leaderboard
       tags:
       - Profiles
   /profiles/lessons/{slug}/progress:

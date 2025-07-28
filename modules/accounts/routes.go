@@ -341,3 +341,4 @@ func LogoutAll(db *ent.Client) fiber.Handler {
 		return c.Status(200).JSON(base.ResponseMessage("Logout successful"))
 	}
 }
+

@@ -3,6 +3,7 @@ package profiles
 import (
 	"context"
 	"math"
+	"sort"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,6 +15,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/ent/lesson"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/lessonprogress"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/predicate"
+	"github.com/kayprogrammer/ednet-fiber-api/ent/quizresult"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/user"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/courses"
 )
@@ -123,4 +125,39 @@ func (p ProfileManager) GetCourseProgress(
 	percentage := (float64(lessonProgressCount) / float64(lessonsCount)) * 100
 	rounded := math.Round(percentage*100) / 100
 	return rounded
+}
+
+func (p ProfileManager) GetLeaderboard(db *ent.Client, ctx context.Context) []*LeaderboardEntry {
+	leaderboard := []*LeaderboardEntry{}
+
+	db.QuizResult.Query().
+		GroupBy(quizresult.UserColumn).
+		Aggregate(ent.Sum(quizresult.FieldScore)).
+		ScanX(ctx, &leaderboard)
+
+	// Sort manually since Ent doesn't allow ordering on groupBy aggregate directly
+	sort.Slice(leaderboard, func(i, j int) bool {
+		return leaderboard[i].TotalScore > leaderboard[j].TotalScore
+	})
+
+	// Fetch user info
+	userIDs := make([]uuid.UUID, len(leaderboard))
+	for i, entry := range leaderboard {
+		userIDs[i] = entry.UserID
+	}
+
+	users := db.User.Query().Where(user.IDIn(userIDs...)).AllX(ctx)
+
+	userMap := make(map[uuid.UUID]*ent.User)
+	for _, u := range users {
+		userMap[u.ID] = u
+	}
+
+	for _, entry := range leaderboard {
+		if u, ok := userMap[entry.UserID]; ok {
+			entry.Name = u.Name
+			entry.Username = u.Username
+		}
+	}
+	return leaderboard
 }

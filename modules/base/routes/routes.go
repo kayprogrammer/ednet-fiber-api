@@ -12,7 +12,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/modules/profiles"
 )
 
-// All Endpoints (50)
+// All Endpoints (45)
 func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 
 	api := app.Group("/api/v1")
@@ -36,7 +36,7 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 	authRouter.Get("/logout", accounts.AuthMiddleware(db), accounts.Logout(db))
 	authRouter.Get("/logout/all", accounts.AuthMiddleware(db), accounts.LogoutAll(db))
 
-	// Profiles Routes (2)
+	// Profiles Routes (7)
 	profilesRouter := api.Group("/profiles")
 	profilesRouter.Get("", accounts.AuthMiddleware(db), profiles.GetProfile(db))
 	profilesRouter.Put("", accounts.AuthMiddleware(db), profiles.UpdateProfile(db))
@@ -45,8 +45,9 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 
 	profilesRouter.Post("/lessons/:slug/progress", accounts.AuthMiddleware(db), profiles.CreateOrUpdateLessonProgress(db))
 	profilesRouter.Get("/lessons/:slug/progress", accounts.AuthMiddleware(db), profiles.GetLessonProgress(db))
+	profilesRouter.Get("/leaderboard", accounts.AuthMiddleware(db), profiles.GetLeaderboard(db))
 
-	// Courses Routes (2)
+	// Courses Routes (11)
 	coursesRouter := api.Group("/courses")
 	coursesRouter.Get("", courses.GetLatestCourses(db))
 	coursesRouter.Post("/pdf/summarize", accounts.AuthMiddleware(db), courses.PostSummarizePDF(cfg))
@@ -61,7 +62,7 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 	coursesRouter.Post("/quizzes/:quiz_slug/results", accounts.AuthMiddleware(db), courses.SubmitQuizResult(db))
 
 
-	// Instructor Routes (2)
+	// Instructor Routes (15)
 	instructorsRouter := api.Group("/instructor", accounts.AuthMiddleware(db, user.RoleInstructor))
 	instructorsRouter.Get("/courses", instructors.GetInstructorCourses(db))
 	instructorsRouter.Post("/courses", instructors.CreateCourse(db))

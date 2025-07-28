@@ -71,3 +71,14 @@ type CourseProgressResponseSchema struct {
 	Data CourseProgressResponseData `json:"data"`
 }
 
+type LeaderboardEntry struct {
+	UserID     uuid.UUID `json:"user_id"`
+	Name       string    `json:"name"`
+	Username   string    `json:"username"`
+	TotalScore int       `json:"total_score" sql:"sum"`
+}
+
+type LeaderboardResponseSchema struct {
+	base.ResponseSchema
+	Data []*LeaderboardEntry `json:"data"`
+}

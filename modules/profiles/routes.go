@@ -2,6 +2,7 @@ package profiles
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
@@ -202,5 +203,22 @@ func GetCourseProgress(db *ent.Client) fiber.Handler {
 			Data:           CourseProgressResponseData{Percentage: courseProgressPercentage},
 		}
 		return c.Status(201).JSON(response)
+	}
+}
+
+// @Summary Get Leaderboard
+// @Description `This endpoint retrieves the top 100 students by quiz score.`
+// @Tags Profiles
+// @Failure 200 {object} LeaderboardResponseSchema
+// @Router /profiles/leaderboard [get]
+// @Security BearerAuth
+func GetLeaderboard(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		leaderboard := profileManager.GetLeaderboard(db, c.Context())
+		log.Println(leaderboard)
+		return c.Status(200).JSON(LeaderboardResponseSchema{
+			ResponseSchema: base.ResponseMessage("Leaderboard fetched successfully"),
+			Data:           leaderboard,
+		})
 	}
 }

@@ -329,10 +329,8 @@ func (c CourseManager) SaveQuizResult(
 	}
 	score := (float64(correct) / float64(total)) * 100
 
-	// Create QuizResult
-	quizResult := db.QuizResult.Create().
-		SetUser(user).
-		SetQuiz(quiz).
+	// Update QuizResult
+	result = result.Update().
 		SetScore(score).
 		SetTimeTaken(data.TimeTaken).
 		SetCompletedAt(time.Now()).
@@ -347,14 +345,15 @@ func (c CourseManager) SaveQuizResult(
 			isCorrect = true
 		}
 		bulk = append(bulk, db.Answer.Create().
-			SetResult(quizResult).
+			SetResult(result).
 			SetQuestionID(ans.QuestionID).
 			SetSelectedOptionID(ans.SelectedOptionID).
 			SetIsCorrect(isCorrect),
 		)
 	}
 	db.Answer.CreateBulk(bulk...).ExecX(ctx)
-	return quizResult, nil
+	result.Edges.Answers = result.QueryAnswers().AllX(ctx)
+	return result, nil
 }
 
 func (c CourseManager) GetQuizResult(

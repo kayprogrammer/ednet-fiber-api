@@ -36,9 +36,9 @@ func SummarizePDF(c *fiber.Ctx, cfg config.Config, maxPoints int) ([]string, int
 	file := files[0]
 
 	// Check file size
-	if file.Size > 10*1024*1024 {
-		log.Println("File size cannot be more than 10MB")
-		errData = config.RequestErr(config.ERR_INVALID_ENTRY, "File size cannot be more than 10MB")
+	if file.Size > 3*1024*1024 {
+		log.Println("File size cannot be more than 3MB")
+		errData = config.RequestErr(config.ERR_INVALID_ENTRY, "File size cannot be more than 3MB")
 		return nil, 422, &errData
 	}
 
