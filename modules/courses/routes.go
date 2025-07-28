@@ -2,6 +2,7 @@ package courses
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
@@ -333,18 +334,38 @@ func GetQuizResult(db *ent.Client) fiber.Handler {
 // @Failure 400 {object} base.InvalidErrorExample
 // @Router /courses/pdf/summarize [post]
 // @Security BearerAuth
-func PostSummarizePDF(cfg config.Config) fiber.Handler {
+func PostSummarizePDF(db *ent.Client, cfg config.Config) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		user := base.RequestUser(c)
 		// Get max_points from query, default to 30
 		maxPoints, _ := strconv.Atoi(c.Query("max_points", "30"))
 		if maxPoints > 100 {
 			maxPoints = 100
 		}
 
+		// Check daily limit
+		now := time.Now()
+		if user.LastSummaryDate != nil && user.LastSummaryDate.Year() == now.Year() && user.LastSummaryDate.YearDay() == now.YearDay() {
+			if user.SummaryCount >= 10 {
+				return config.APIError(c, fiber.StatusTooManyRequests, config.RequestErr(config.ERR_TOO_MANY_REQUESTS, "You have reached your daily limit of 10 PDF summaries."))
+			}
+		} else {
+			// Reset count for a new day
+			user.Update().SetSummaryCount(0).ExecX(c.Context())
+		}
+
 		summary, status, errData := SummarizePDF(c, cfg, maxPoints)
 		if errData != nil {
 			return config.APIError(c, status, *errData)
 		}
+
+		// Update user's summary count and date
+		if user.LastSummaryDate == nil || user.LastSummaryDate.Year() != now.Year() || user.LastSummaryDate.YearDay() != now.YearDay() {
+			user.Update().SetLastSummaryDate(now).SetSummaryCount(1).ExecX(c.Context())
+		} else {
+			user.Update().SetSummaryCount(user.SummaryCount + 1).ExecX(c.Context())
+		}
+
 		return c.Status(200).JSON(
 			PDFSummaryResponseSchema{
 				ResponseSchema: base.ResponseMessage("PDF Summarized Successfully"),

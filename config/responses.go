@@ -40,6 +40,7 @@ var ERR_PASSWORD_SAME = "same_password"
 var ERR_NOT_FOUND = "not_found"
 var ERR_LIMITS_REACHED = "limits_reached"
 var ERR_FORBIDDEN = "forbidden"
+var ERR_TOO_MANY_REQUESTS = "too_many_requests"
 
 func RequestErr(code string, message string, opts ...map[string]string) ErrorResponse {
 	var data *map[string]string

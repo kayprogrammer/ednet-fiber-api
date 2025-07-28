@@ -6,9 +6,12 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2/middleware/monitor"
+	"time"
+
 	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/base/routes"
 	"github.com/kayprogrammer/ednet-fiber-api/modules/seeding"
@@ -63,6 +66,18 @@ func main() {
 
 	// Register custom panic recovery middleware
 	app.Use(RecoveryMiddleware())
+
+	// Rate limiter
+	app.Use(limiter.New(limiter.Config{
+		Max:        10,
+		Expiration: 1 * time.Minute,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return config.APIError(c, fiber.StatusTooManyRequests, config.RequestErr(config.ERR_TOO_MANY_REQUESTS, "Too many requests, please try again later."))
+		},
+	}))
 
 	app.Get("/metrics", monitor.New())
 

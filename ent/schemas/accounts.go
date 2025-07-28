@@ -28,6 +28,8 @@ func (User) Fields() []ent.Field {
 		field.Uint32("otp").Optional().Nillable(),
 		field.Time("otp_expiry").Optional().Nillable(),
 		field.Bool("social_login").Default(false),
+		field.Time("last_summary_date").Optional().Nillable(),
+		field.Int("summary_count").Default(0),
 		field.Enum("role").Values("student", "instructor", "admin").Default("student"),
 	)
 }

@@ -50,7 +50,7 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 	// Courses Routes (11)
 	coursesRouter := api.Group("/courses")
 	coursesRouter.Get("", courses.GetLatestCourses(db))
-	coursesRouter.Post("/pdf/summarize", accounts.AuthMiddleware(db), courses.PostSummarizePDF(cfg))
+	coursesRouter.Post("/pdf/summarize", accounts.AuthMiddleware(db), courses.PostSummarizePDF(db, cfg))
 	coursesRouter.Get("/:slug", courses.GetCourseDetails(db))
 	coursesRouter.Get("/:slug/lessons", courses.GetCourseLessons(db))
 	coursesRouter.Get("/:course_slug/lessons/:lesson_slug", courses.GetCourseLessonDetails(db))
