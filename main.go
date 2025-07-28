@@ -46,7 +46,20 @@ func main() {
 	db := config.ConnectDb(cfg, ctx)
 	seeding.CreateInitialData(db, ctx, cfg)
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		BodyLimit: 15 * 1024 * 1024, // 15MB
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			if err == fiber.ErrRequestEntityTooLarge {
+				return config.APIError(c, fiber.StatusRequestEntityTooLarge, config.ServerErr("Request body is too large. Maximum allowed size is 15MB."))
+			}
+			// Default error handler
+			code := fiber.StatusInternalServerError
+			if e, ok := err.(*fiber.Error); ok {
+				code = e.Code
+			}
+			return config.APIError(c, code, config.ServerErr(err.Error()))
+		},
+	})
 
 	// Register custom panic recovery middleware
 	app.Use(RecoveryMiddleware())

@@ -334,3 +334,13 @@ type QuizResultResponseSchema struct {
 	base.ResponseSchema
 	Data QuizResultSchema `json:"data"`
 }
+
+type PDFSummarySchema struct {
+	Summary []string `json:"summary"`
+	Points  int      `json:"points"`
+}
+
+type PDFSummaryResponseSchema struct {
+	base.ResponseSchema
+	Data PDFSummarySchema `json:"data"`
+}

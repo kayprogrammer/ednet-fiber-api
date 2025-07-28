@@ -1,6 +1,8 @@
 package courses
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
@@ -315,3 +317,39 @@ func GetQuizResult(db *ent.Client) fiber.Handler {
 		return c.Status(200).JSON(response)
 	}
 }
+
+// @Summary Summarize a PDF document
+// @Description `This endpoint accepts a PDF file and returns a summarized version of its content.`
+// @Tags Courses
+// @Accept multipart/form-data
+// @Param file formData file true "PDF file to summarize"
+// @Param max_points query int false "Maximum number of summary points" default(30)
+// @Success 200 {object} PDFSummaryResponseSchema
+// @Failure 400 {object} base.InvalidErrorExample
+// @Router /courses/pdf/summarize [post]
+// @Security BearerAuth
+func PostSummarizePDF(cfg config.Config) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// Get max_points from query, default to 30
+		maxPoints, _ := strconv.Atoi(c.Query("max_points", "30"))
+		if maxPoints > 100 {
+			maxPoints = 100
+		}
+
+		summary, status, errData := SummarizePDF(c, cfg, maxPoints)
+		if errData != nil {
+			return config.APIError(c, status, *errData)
+		}
+		return c.Status(200).JSON(
+			PDFSummaryResponseSchema{
+				ResponseSchema: base.ResponseMessage("PDF Summarized Successfully"),
+				Data: PDFSummarySchema{
+					Summary: summary,
+					Points:  maxPoints,
+				},
+			},
+		)
+	}
+}
+
+

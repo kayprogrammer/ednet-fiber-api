@@ -44,6 +44,7 @@ type Config struct {
 	CloudinaryApiKey          string `mapstructure:"CLOUDINARY_API_KEY"`
 	CloudinaryApiSecret       string `mapstructure:"CLOUDINARY_API_SECRET"`
 	RedisUrl                  string `mapstructure:"REDIS_URL"`
+	GeminiApiKey              string `mapstructure:"GEMINI_API_KEY"`
 }
 
 func GetConfig() (config Config) {

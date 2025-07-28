@@ -70,3 +70,4 @@ type CourseProgressResponseSchema struct {
 	base.ResponseSchema
 	Data CourseProgressResponseData `json:"data"`
 }
+
