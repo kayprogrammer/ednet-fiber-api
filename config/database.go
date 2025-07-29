@@ -11,7 +11,11 @@ import (
 )
 
 func ConnectDb(cfg Config, ctx context.Context) *ent.Client {
-	dbUrlTemplate := "host=%s port=%s user=%s dbname=%s password=%s sslmode=disable"
+	sslmode := "disable"
+	if cfg.Environment == "production" {
+		sslmode = "require"
+	}
+	dbUrlTemplate := "host=%s port=%s user=%s dbname=%s password=%s sslmode=%s"
 
 	dbUrl := fmt.Sprintf(
 		dbUrlTemplate,
@@ -20,6 +24,7 @@ func ConnectDb(cfg Config, ctx context.Context) *ent.Client {
 		cfg.PostgresUser,
 		cfg.PostgresDB,
 		cfg.PostgresPassword,
+		sslmode,
 	)
 
 	client, err := ent.Open("postgres", dbUrl)
