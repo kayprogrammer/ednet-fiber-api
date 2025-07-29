@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/viper"
@@ -57,11 +58,21 @@ func GetConfig() (config Config) {
 	viper.SetConfigType("env")
 
 	viper.AutomaticEnv()
-	var err error
-	if err = viper.ReadInConfig(); err != nil {
-		panic(err)
+
+	// Try to read the .env file, but fallback if it doesn't exist
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			fmt.Println("No .env file found; falling back to environment variables.")
+		} else {
+			// Real error (e.g., bad format), panic
+			panic(fmt.Errorf("fatal error reading config: %w", err))
+		}
 	}
-	viper.Unmarshal(&config)
+
+	if err := viper.Unmarshal(&config); err != nil {
+		panic(fmt.Errorf("unable to decode into struct: %w", err))
+	}
+
 	config.SecretKeyByte = []byte(config.SecretKey)
 	return
 }
