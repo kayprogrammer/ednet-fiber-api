@@ -2,8 +2,6 @@
 
 A comprehensive EdTech API built with the Go Fiber framework and Ent ORM. This project provides a robust backend solution for an educational platform, handling user management, course administration, content delivery, and more.
 
-![alt text](https://github.com/kayprogrammer/ednet-fiber-api/blob/main/display/fiber.png?raw=true)
-
 ## Features
 
 *   **User Authentication & Authorization:** Secure user registration, login, and role-based access control (Admin, Instructor, Student).
@@ -97,7 +95,7 @@ The application will apply pending migrations on startup if configured to do so.
 
 API documentation (Swagger/OpenAPI) is available at `/swagger/index.html` when the application is running.
 
-## Live URL - (EDNET API Docs)[https://ednet-api.fly.io]
+## Live URL - [EDNET API Docs](https://ednet-api.fly.io)
 
 ![alt text](https://github.com/kayprogrammer/ednet-fiber-api/blob/main/display/disp1.png?raw=true)
 ![alt text](https://github.com/kayprogrammer/ednet-fiber-api/blob/main/display/disp2.png?raw=true)
