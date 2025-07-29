@@ -95,7 +95,7 @@ The application will apply pending migrations on startup if configured to do so.
 
 API documentation (Swagger/OpenAPI) is available at `/swagger/index.html` when the application is running.
 
-## Live URL - [EDNET API Docs](https://ednet-api.fly.io)
+## Live URL - [EDNET API Docs](https://ednet-api.fly.dev)
 
 ![alt text](https://github.com/kayprogrammer/ednet-fiber-api/blob/main/display/disp1.png?raw=true)
 ![alt text](https://github.com/kayprogrammer/ednet-fiber-api/blob/main/display/disp2.png?raw=true)

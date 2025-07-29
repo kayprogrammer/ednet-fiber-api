@@ -43,7 +43,6 @@ type Config struct {
 	CloudinaryCloudName       string `mapstructure:"CLOUDINARY_CLOUD_NAME"`
 	CloudinaryApiKey          string `mapstructure:"CLOUDINARY_API_KEY"`
 	CloudinaryApiSecret       string `mapstructure:"CLOUDINARY_API_SECRET"`
-	RedisUrl                  string `mapstructure:"REDIS_URL"`
 	GeminiApiKey              string `mapstructure:"GEMINI_API_KEY"`
 }
 
