@@ -3,7 +3,10 @@ package config
 import (
 	"fmt"
 	"os"
+	"reflect"
+	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -47,31 +50,56 @@ type Config struct {
 	GeminiApiKey              string `mapstructure:"GEMINI_API_KEY"`
 }
 
-func GetConfig() (config Config) {
-	configPath := os.Getenv("CONFIG_PATH")
-	if configPath == "" {
-		configPath = "." // Default to current directory if not set
+// bindEnvs explicitly binds environment variables to viper keys using struct tags.
+// It expects a pointer to a struct, which is a more idiomatic way to handle reflection.
+func bindEnvs(cfgPtr interface{}) {
+	v := reflect.ValueOf(cfgPtr)
+	if v.Kind() != reflect.Ptr || v.IsNil() {
+		panic("bindEnvs requires a non-nil pointer to a struct")
 	}
 
-	viper.AddConfigPath(configPath)
-	viper.SetConfigName(".env")
-	viper.SetConfigType("env")
+	v = v.Elem()
+	if v.Kind() != reflect.Struct {
+		panic("bindEnvs requires a pointer to a struct")
+	}
 
-	viper.AutomaticEnv()
-
-	// Try to read the .env file, but fallback if it doesn't exist
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			fmt.Println("No .env file found; falling back to environment variables.")
-		} else {
-			// Real error (e.g., bad format), panic
-			panic(fmt.Errorf("fatal error reading config: %w", err))
+	t := v.Type()
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		tag := field.Tag.Get("mapstructure")
+		if tag != "" {
+			// Bind the environment variable to the viper key.
+			// We can ignore the error as viper.BindEnv currently always returns nil.
+			_ = viper.BindEnv(tag)
 		}
 	}
+}
+
+func GetConfig() (config Config) {
+	// Load .env only in development or local
+	env := os.Getenv("ENVIRONMENT")
+	if env == "" {
+		env = "development"
+	}
+	if env == "local" || env == "development" {
+		if err := godotenv.Load(); err != nil {
+			fmt.Println("No .env file found (skipping godotenv)")
+		}
+	}
+
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	bindEnvs(&config)
 
 	if err := viper.Unmarshal(&config); err != nil {
 		panic(fmt.Errorf("unable to decode into struct: %w", err))
 	}
+
+	fmt.Println("--- Loaded Configuration ---")
+	fmt.Printf("Environment: %s\n", config.Environment)
+	fmt.Printf("Port: %s\n", config.Port)
+	fmt.Println("----------------------------")
 
 	config.SecretKeyByte = []byte(config.SecretKey)
 	return

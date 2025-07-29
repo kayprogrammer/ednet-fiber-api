@@ -16,7 +16,7 @@ func ConnectDb(cfg Config, ctx context.Context) *ent.Client {
 		sslmode = "require"
 	}
 	dbUrlTemplate := "host=%s port=%s user=%s dbname=%s password=%s sslmode=%s"
-
+	log.Println(cfg.PostgresServer)
 	dbUrl := fmt.Sprintf(
 		dbUrlTemplate,
 		cfg.PostgresServer,
