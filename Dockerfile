@@ -1,15 +1,28 @@
-FROM golang:1.24-alpine
+# ---- Build Stage ----
+FROM golang:1.24-alpine AS builder
 
-RUN mkdir build
+WORKDIR /app
 
-# We create folder named build for our app.
-WORKDIR /build
+# Install git (required for some dependencies), and build tools
+RUN apk add --no-cache git
 
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
+
+COPY . .
+
+# Build the Go binary
+RUN go build -o main .
+
+# ---- Runtime Stage ----
+FROM alpine:latest
+
+WORKDIR /root/
+
+# Copy binary from build stage
+COPY --from=builder /app/main .
 
 EXPOSE 8000
 
-CMD ["go", "run", "main.go"]
+# Run the binary
+CMD ["./main"]
