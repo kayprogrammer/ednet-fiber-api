@@ -28,6 +28,7 @@ FROM gcr.io/distroless/static
 WORKDIR /app
 
 COPY --from=builder /app/main .
+COPY --from=builder /app/docs ./docs
 
 # Run the binary
 ENTRYPOINT ["/app/main"]

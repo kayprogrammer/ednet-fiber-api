@@ -69,14 +69,12 @@ func bindEnvs(cfgPtr interface{}) {
 		tag := field.Tag.Get("mapstructure")
 		if tag != "" {
 			// Bind the environment variable to the viper key.
-			// We can ignore the error as viper.BindEnv currently always returns nil.
 			_ = viper.BindEnv(tag)
 		}
 	}
 }
 
 func GetConfig() (config Config) {
-	// Load .env only in development or local
 	env := os.Getenv("ENVIRONMENT")
 	if env == "" {
 		env = "development"

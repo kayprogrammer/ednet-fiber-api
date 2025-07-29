@@ -10,9 +10,10 @@ import (
 
 func createAdmin(db *ent.Client, ctx context.Context, cfg config.Config) *ent.User {
 	email := cfg.FirstAdminEmail
-	user_, _ := db.User.Query().Where(user.Email(email)).Only(ctx)
+	username := "testadmin"
+	user_, _ := db.User.Query().Where(user.Or(user.Email(email), user.Username(username))).Only(ctx)
 	if user_ == nil {
-		user_ = db.User.Create().SetName("Test Admin").SetEmail(email).SetUsername("testadmin").
+		user_ = db.User.Create().SetName("Test Admin").SetEmail(email).SetUsername(username).
 			SetRole(user.RoleAdmin).SetIsVerified(true).SetPassword(config.HashPassword(cfg.FirstAdminPassword)).
 			SaveX(ctx)
 	}
@@ -21,9 +22,10 @@ func createAdmin(db *ent.Client, ctx context.Context, cfg config.Config) *ent.Us
 
 func createStudent(db *ent.Client, ctx context.Context, cfg config.Config) *ent.User {
 	email := cfg.FirstStudentEmail
-	user_, _ := db.User.Query().Where(user.Email(email)).Only(ctx)
+	username := "teststudent"
+	user_, _ := db.User.Query().Where(user.Or(user.Email(email), user.Username(username))).Only(ctx)
 	if user_ == nil {
-		user_ = db.User.Create().SetName("Test Student").SetEmail(email).SetUsername("teststudent").
+		user_ = db.User.Create().SetName("Test Student").SetEmail(email).SetUsername(username).
 			SetRole(user.RoleStudent).SetIsVerified(true).SetPassword(config.HashPassword(cfg.FirstStudentPassword)).
 			SaveX(ctx)
 	}
@@ -32,9 +34,10 @@ func createStudent(db *ent.Client, ctx context.Context, cfg config.Config) *ent.
 
 func createInstructor(db *ent.Client, ctx context.Context, cfg config.Config) *ent.User {
 	email := cfg.FirstInstructorEmail
-	user_, _ := db.User.Query().Where(user.Email(email)).Only(ctx)
+	username := "testinstructor"
+	user_, _ := db.User.Query().Where(user.Or(user.Email(email), user.Username(username))).Only(ctx)
 	if user_ == nil {
-		user_ = db.User.Create().SetName("Test Instructor").SetEmail(email).SetUsername("testinstructor").
+		user_ = db.User.Create().SetName("Test Instructor").SetEmail(email).SetUsername(username).
 			SetRole(user.RoleInstructor).SetIsVerified(true).SetPassword(config.HashPassword(cfg.FirstInstructorPassword)).
 			SaveX(ctx)
 	}
