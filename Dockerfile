@@ -1,30 +1,33 @@
 # syntax=docker/dockerfile:1
 
-# Build Stage
-FROM golang:1.24.1 AS builder
+# Stage 1: Build
+FROM golang:1.24.1-alpine AS builder
+
+# Needed for static linking
+RUN apk add --no-cache upx
 
 WORKDIR /app
 
-# Copy go mod and sum files
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
 
-# Copy the rest of the source code
 COPY . .
 
-# Generate Ent code
+# Regenerate ent if needed
 RUN go generate ./ent
 
-# Build the binary
-RUN go build -o main .
+# Build static binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main .
 
-# Final Stage
+# Optional: compress binary (smaller image)
+RUN upx --best main
+
+# Stage 2: Minimal final image
 FROM gcr.io/distroless/static
 
 WORKDIR /app
 
 COPY --from=builder /app/main .
 
-CMD ["/app/main"]
+# Run the binary
+ENTRYPOINT ["/app/main"]
