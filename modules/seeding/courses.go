@@ -2,6 +2,7 @@ package seeding
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -121,4 +122,31 @@ func createCourses(db *ent.Client, ctx context.Context, instructor *ent.User, ca
 	}
 	log.Println("Courses Data Seeded Successfully.")
 	return courses
+}
+
+func createReviews(db *ent.Client, ctx context.Context, users []*ent.User, courses []*ent.Course) {
+	log.Println("Seeding Reviews Data...")
+	reviews := db.Review.Query().AllX(ctx)
+	if len(reviews) < 1 {
+		for _, course := range courses {
+			for _, user := range users {
+				// Create a random rating between 1 and 5
+				rating := 1 + rand.Float64()*(5.0000001-1)
+				// Create a random comment
+				comment := fmt.Sprintf("This is a great course! I learned a lot. Rating: %.2f/5", rating)
+
+				_, err := db.Review.Create().
+					SetUserID(user.ID).
+					SetCourseID(course.ID).
+					SetRating(rating).
+					SetComment(comment).
+					Save(ctx)
+
+				if err != nil {
+					log.Printf("Failed to create review for course '%s' by user '%s': %v", course.Title, user.Email, err)
+				}
+			}
+		}
+	}
+	log.Println("Reviews Data Seeded Successfully.")
 }

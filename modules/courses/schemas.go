@@ -238,7 +238,7 @@ func (q QuizDetailSchema) Assign(quiz *ent.Quiz) QuizDetailSchema {
 			parsedOptions = append(parsedOptions, QuestionOptionSchema{ID: option.ID, Text: option.Text, IsCorrect: option.IsCorrect})
 		}
 		parsedQuestions = append(parsedQuestions, QuestionSchema{
-			ID: question.ID,
+			ID:      question.ID,
 			Text:    question.Text,
 			Order:   question.Order,
 			Options: parsedOptions,
@@ -310,7 +310,7 @@ type QuizResultSchema struct {
 	Score       float64        `json:"score"`
 	TimeTaken   int            `json:"time_taken"`
 	StartedAt   time.Time      `json:"started_at"`
-	CompletedAt *time.Time      `json:"completed_at"`
+	CompletedAt *time.Time     `json:"completed_at"`
 	Answers     []AnswerSchema `json:"answers"`
 }
 
@@ -344,4 +344,55 @@ type PDFSummarySchema struct {
 type PDFSummaryResponseSchema struct {
 	base.ResponseSchema
 	Data PDFSummarySchema `json:"data"`
+}
+
+// ReviewSchema for creating and updating reviews
+type ReviewSchema struct {
+	Rating  float64 `json:"rating" validate:"required,min=1,max=5"`
+	Comment string        `json:"content"`
+}
+
+// ReviewResponseData for single review response
+type ReviewResponseData struct {
+	ID        uuid.UUID           `json:"id"`
+	User      base.UserDataSchema `json:"user"`
+	Rating    float64             `json:"rating"`
+	Comment   string              `json:"content"`
+	CreatedAt time.Time           `json:"created_at"`
+	UpdatedAt time.Time           `json:"updated_at"`
+}
+
+func (r ReviewResponseData) Assign(review *ent.Review) ReviewResponseData {
+	r.ID = review.ID
+	r.User = r.User.Assign(review.Edges.User)
+	r.Rating = review.Rating
+	r.Comment = review.Comment
+	r.CreatedAt = review.CreatedAt
+	r.UpdatedAt = review.UpdatedAt
+	return r
+}
+
+// ReviewResponseSchema for single review response
+type ReviewResponseSchema struct {
+	base.ResponseSchema
+	Data ReviewResponseData `json:"data"`
+}
+
+// ReviewsResponseSchema for multiple reviews response
+type ReviewsResponseSchema struct {
+	base.ResponseSchema
+	Data config.PaginationResponse[ReviewResponseData] `json:"data"`
+}
+
+func (r ReviewsResponseSchema) Assign(reviewsData *config.PaginationResponse[*ent.Review]) ReviewsResponseSchema {
+	items := make([]ReviewResponseData, 0)
+	for _, review := range reviewsData.Items {
+		items = append(items, ReviewResponseData{}.Assign(review))
+	}
+	r.Data.Items = items
+	r.Data.ItemsCount = reviewsData.ItemsCount
+	r.Data.Page = reviewsData.Page
+	r.Data.TotalPages = reviewsData.TotalPages
+	r.Data.Limit = reviewsData.Limit
+	return r
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/kayprogrammer/ednet-fiber-api/modules/profiles"
 )
 
-// All Endpoints (45)
+// All Endpoints (51)
 func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 
 	api := app.Group("/api/v1")
@@ -47,7 +47,7 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 	profilesRouter.Get("/lessons/:slug/progress", accounts.AuthMiddleware(db), profiles.GetLessonProgress(db))
 	profilesRouter.Get("/leaderboard", accounts.AuthMiddleware(db), profiles.GetLeaderboard(db))
 
-	// Courses Routes (11)
+	// Courses Routes (17)
 	coursesRouter := api.Group("/courses")
 	coursesRouter.Get("", courses.GetLatestCourses(db))
 	coursesRouter.Post("/pdf/summarize", accounts.AuthMiddleware(db), courses.PostSummarizePDF(db, cfg))
@@ -61,6 +61,13 @@ func SetupRoutes(app *fiber.App, db *ent.Client, cfg config.Config) {
 	coursesRouter.Get("/quizzes/:quiz_slug/results", accounts.AuthMiddleware(db), courses.GetQuizResult(db))
 	coursesRouter.Post("/quizzes/:quiz_slug/results", accounts.AuthMiddleware(db), courses.SubmitQuizResult(db))
 	coursesRouter.Post("/webhook/stripe", courses.StripeWebhook(db, cfg))
+
+	// Reviews
+	coursesRouter.Get("/:slug/reviews", courses.GetCourseReviews(db))
+	coursesRouter.Post("/:slug/reviews", accounts.AuthMiddleware(db), courses.CreateCourseReview(db))
+	coursesRouter.Get("/reviews/:id", courses.GetCourseReview(db))
+	coursesRouter.Put("/reviews/:id", accounts.AuthMiddleware(db), courses.UpdateCourseReview(db))
+	coursesRouter.Delete("/reviews/:id", accounts.AuthMiddleware(db), courses.DeleteCourseReview(db))
 
 
 	// Instructor Routes (15)

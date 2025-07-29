@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/kayprogrammer/ednet-fiber-api/config"
 	"github.com/kayprogrammer/ednet-fiber-api/ent"
 	"github.com/kayprogrammer/ednet-fiber-api/ent/enrollment"
@@ -381,4 +382,150 @@ func PostSummarizePDF(db *ent.Client, cfg config.Config) fiber.Handler {
 	}
 }
 
+// @Summary Retrieve Course Reviews
+// @Description This endpoint retrieves paginated responses of a course reviews
+// @Tags Courses
+// @Param slug path string true "Course Slug"
+// @Param page query int false "Current Page" default(1)
+// @Param limit query int false "Page Limit" default(100)
+// @Success 404 {object} base.NotFoundErrorExample
+// @Success 200 {object} ReviewsResponseSchema
+// @Router /courses/{slug}/reviews [get]
+func GetCourseReviews(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		course := courseManager.GetCourseBySlug(db, c.Context(), c.Params("slug"), nil, false)
+		if course == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Course Not Found"))
+		}
+		reviews := courseManager.GetReviews(db, course, c)
 
+		response := ReviewsResponseSchema{
+			ResponseSchema: base.ResponseMessage("Reviews Fetched Successfully"),
+		}.Assign(reviews)
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Create a review for a course
+// @Description This endpoint allows a user to create a review for a specific course
+// @Tags Courses
+// @Param slug path string true "Course Slug"
+// @Param review body ReviewSchema true "Review object"
+// @Success 201 {object} ReviewResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Success 400 {object} base.InvalidErrorExample
+// @Failure 422 {object} base.ValidationErrorExample
+// @Router /courses/{slug}/reviews [post]
+// @Security BearerAuth
+func CreateCourseReview(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		course := courseManager.GetCourseBySlug(db, ctx, c.Params("slug"), nil, false)
+		if course == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Course Not Found"))
+		}
+		data := ReviewSchema{}
+		// Validate request
+		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+
+		review, err := courseManager.CreateReview(db, ctx, user, course, data)
+		if err != nil {
+			return config.APIError(c, 400, *err)
+		}
+
+		response := ReviewResponseSchema{
+			ResponseSchema: base.ResponseMessage("Review Created Successfully"),
+			Data:           ReviewResponseData{}.Assign(review),
+		}
+		return c.Status(201).JSON(response)
+	}
+}
+
+// @Summary Retrieve a Review
+// @Description This endpoint retrieves a specific review
+// @Tags Courses
+// @Param id path string true "Review ID"
+// @Success 200 {object} ReviewResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Router /courses/reviews/{id} [get]
+func GetCourseReview(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		reviewID, _ := uuid.Parse(c.Params("id"))
+		review := courseManager.GetReview(db, ctx, reviewID)
+		if review == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Review Not Found"))
+		}
+		response := ReviewResponseSchema{
+			ResponseSchema: base.ResponseMessage("Review Fetched Successfully"),
+			Data:           ReviewResponseData{}.Assign(review),
+		}
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Update a review
+// @Description This endpoint allows a user to update their review for a specific course
+// @Tags Courses
+// @Param id path string true "Review ID"
+// @Param review body ReviewSchema true "Review object"
+// @Success 200 {object} ReviewResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Failure 422 {object} base.ValidationErrorExample
+// @Router /courses/reviews/{id} [put]
+// @Security BearerAuth
+func UpdateCourseReview(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		reviewID, _ := uuid.Parse(c.Params("id"))
+		review := courseManager.GetReview(db, ctx, reviewID)
+		if review == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Review Not Found"))
+		}
+		if review.Edges.User.ID != user.ID {
+			return config.APIError(c, 403, config.ForbiddenErr("You are not authorized to perform this action"))
+		}
+		data := ReviewSchema{}
+		// Validate request
+		if errCode, errData := config.ValidateRequest(c, &data); errData != nil {
+			return config.APIError(c, *errCode, *errData)
+		}
+
+		review = courseManager.UpdateReview(db, ctx, review, data)
+
+		response := ReviewResponseSchema{
+			ResponseSchema: base.ResponseMessage("Review Updated Successfully"),
+			Data:           ReviewResponseData{}.Assign(review),
+		}
+		return c.Status(200).JSON(response)
+	}
+}
+
+// @Summary Delete a review
+// @Description This endpoint allows a user to delete their review for a specific course
+// @Tags Courses
+// @Param id path string true "Review ID"
+// @Success 200 {object} base.ResponseSchema
+// @Success 404 {object} base.NotFoundErrorExample
+// @Router /courses/reviews/{id} [delete]
+// @Security BearerAuth
+func DeleteCourseReview(db *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		ctx := c.Context()
+		user := base.RequestUser(c)
+		reviewID, _ := uuid.Parse(c.Params("id"))
+		review := courseManager.GetReview(db, ctx, reviewID)
+		if review == nil {
+			return config.APIError(c, 404, config.NotFoundErr("Review Not Found"))
+		}
+		if review.Edges.User.ID != user.ID {
+			return config.APIError(c, 403, config.ForbiddenErr("You are not authorized to perform this action"))
+		}
+		db.Review.DeleteOne(review).ExecX(ctx)
+		return c.Status(200).JSON(base.ResponseMessage("Review Deleted Successfully"))
+	}
+}

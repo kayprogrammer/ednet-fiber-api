@@ -1,3 +1,4 @@
+
 package courses
 
 import (
@@ -241,8 +242,8 @@ func (c CourseManager) GetCourseLessonBySlug(db *ent.Client, ctx context.Context
 func (c CourseManager) GetExistentEnrollmentByUserAndCourse(db *ent.Client, ctx context.Context, user *ent.User, course *ent.Course, loaded bool) *ent.Enrollment {
 	query := db.Enrollment.Query().
 		Where(
-			enrollment.UserID(user.ID),
-			enrollment.CourseID(course.ID),
+			enrollment.UserIDEQ(user.ID),
+			enrollment.CourseIDEQ(course.ID),
 		)
 	if loaded {
 		query = query.
@@ -399,4 +400,49 @@ func (c CourseManager) GenerateCertificate(db *ent.Client, ctx context.Context, 
 	db.Enrollment.Update().Where(enrollment.CourseID(course.ID), enrollment.UserID(user.ID)).
 		SetCert(cert).
 		SaveX(ctx)
+}
+
+func (c CourseManager) GetReviews(db *ent.Client, course *ent.Course, fibCtx *fiber.Ctx) *config.PaginationResponse[*ent.Review] {
+	query := db.Review.Query().Where(review.CourseID(course.ID)).Order(ent.Desc(review.FieldCreatedAt)).WithUser()
+	reviews := config.PaginateModel(fibCtx, query)
+	return reviews
+}
+
+func (c CourseManager) GetReview(db *ent.Client, ctx context.Context, reviewID uuid.UUID) *ent.Review {
+	review, _ := db.Review.Query().Where(review.IDEQ(reviewID)).WithUser().Only(ctx)
+	return review
+}
+
+func (c CourseManager) CreateReview(db *ent.Client, ctx context.Context, user *ent.User, course *ent.Course, data ReviewSchema) (*ent.Review, *config.ErrorResponse) {
+	// Check if user has already reviewed this course
+	existentReview, _ := db.Review.Query().Where(review.UserIDEQ(user.ID), review.CourseIDEQ(course.ID)).Only(ctx)
+	if existentReview != nil {
+		err := config.RequestErr(config.ERR_NOT_ALLOWED, "You have already reviewed this course")
+		return nil, &err
+	}
+
+	// Check if user is enrolled for this course
+	enrollmentObj := c.GetExistentEnrollmentByUserAndCourse(db, ctx, user, course, false)
+	if enrollmentObj == nil || enrollmentObj.PaymentStatus != enrollment.PaymentStatusSuccessful {
+		err := config.RequestErr(config.ERR_FORBIDDEN, "Only enrolled users can review this course")
+		return nil, &err
+	}
+
+	review := db.Review.Create().
+		SetUser(user).
+		SetCourse(course).
+		SetRating(data.Rating).
+		SetComment(data.Comment).
+		SaveX(ctx)
+	review.Edges.User = user
+	return review, nil
+}
+
+func (c CourseManager) UpdateReview(db *ent.Client, ctx context.Context, reviewObj *ent.Review, data ReviewSchema) *ent.Review {
+	updatedReviewObj := reviewObj.Update().
+		SetRating(data.Rating).
+		SetComment(data.Comment).
+		SaveX(ctx)
+	updatedReviewObj.Edges.User = reviewObj.Edges.User
+	return updatedReviewObj
 }

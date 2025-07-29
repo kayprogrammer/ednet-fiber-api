@@ -227,6 +227,21 @@ definitions:
       total_pages:
         type: integer
     type: object
+  config.PaginationResponse-courses_ReviewResponseData:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/courses.ReviewResponseData'
+        type: array
+      items_count:
+        type: integer
+      limit:
+        type: integer
+      page:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   course.Difficulty:
     enum:
     - beginner
@@ -650,6 +665,54 @@ definitions:
         example: success
         type: string
     type: object
+  courses.ReviewResponseData:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      rating:
+        type: number
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/base.UserDataSchema'
+    type: object
+  courses.ReviewResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/courses.ReviewResponseData'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  courses.ReviewSchema:
+    properties:
+      content:
+        type: string
+      rating:
+        maximum: 5
+        minimum: 1
+        type: number
+    required:
+    - rating
+    type: object
+  courses.ReviewsResponseSchema:
+    properties:
+      data:
+        $ref: '#/definitions/config.PaginationResponse-courses_ReviewResponseData'
+      message:
+        example: Data fetched/created/updated/deleted
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
   courses.SubmitAnswerSchema:
     properties:
       question_id:
@@ -871,31 +934,10 @@ definitions:
 info:
   contact: {}
   description: |-
-    ## A Full-Featured EDTECH API built with FIBER & ENT ORM.
+    ## A Comprehensive EDTECH API built with FIBER & ENT ORM.
 
-    <!-- ### WEBSOCKETS:
-
-    #### Notifications
-
-    - URL: `wss://{host}/api/v4/ws/notifications`
-
-    - Requires authorization, so pass in the Bearer Authorization header.
-
-    - You can only read and not send notification messages into this socket. -->
-
-
-    <!-- #### Chats
-
-    - URL: `wss://{host}/api/v4/ws/chats/{id}`
-    - Requires authorization, so pass in the Bearer Authorization header.
-    - Use chat_id as the ID for an existing chat or username if it's the first message in a DM.
-    - You cannot read realtime messages from a username that doesn't belong to the authorized user, but you can surely send messages.
-    - Only send a message to the socket endpoint after the message has been created or updated, and files have been uploaded.
-    - Fields when sending a message through the socket:
-
-      ```json
-      { "status": "CREATED", "id": "fe4e0235-80fc-4c94-b15e-3da63226f8ab" }
-      ``` -->
+    ### Built by Kenechi Ifeanyi (kayprogrammer)
+    ### Github Repo - https://github.com/kayprogrammer/ednet-fiber-api
   title: EDNET API
   version: "1.0"
 paths:
@@ -1310,6 +1352,73 @@ paths:
       summary: Retrieve Course Lessons
       tags:
       - Courses
+  /courses/{slug}/reviews:
+    get:
+      description: This endpoint retrieves paginated responses of a course reviews
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - default: 1
+        description: Current Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Page Limit
+        in: query
+        name: limit
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.ReviewsResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      summary: Retrieve Course Reviews
+      tags:
+      - Courses
+    post:
+      description: This endpoint allows a user to create a review for a specific course
+      parameters:
+      - description: Course Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Review object
+        in: body
+        name: review
+        required: true
+        schema:
+          $ref: '#/definitions/courses.ReviewSchema'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/courses.ReviewResponseSchema'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.InvalidErrorExample'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Create a review for a course
+      tags:
+      - Courses
   /courses/lessons/{slug}/quizzes:
     get:
       description: This endpoint retrieves paginated responses of a lesson quizzes
@@ -1488,6 +1597,83 @@ paths:
       security:
       - BearerAuth: []
       summary: Start Quiz
+      tags:
+      - Courses
+  /courses/reviews/{id}:
+    delete:
+      description: This endpoint allows a user to delete their review for a specific
+        course
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.ResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Delete a review
+      tags:
+      - Courses
+    get:
+      description: This endpoint retrieves a specific review
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.ReviewResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+      summary: Retrieve a Review
+      tags:
+      - Courses
+    put:
+      description: This endpoint allows a user to update their review for a specific
+        course
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Review object
+        in: body
+        name: review
+        required: true
+        schema:
+          $ref: '#/definitions/courses.ReviewSchema'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/courses.ReviewResponseSchema'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/base.NotFoundErrorExample'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/base.ValidationErrorExample'
+      security:
+      - BearerAuth: []
+      summary: Update a review
       tags:
       - Courses
   /general/site-detail:

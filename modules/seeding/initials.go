@@ -10,10 +10,12 @@ import (
 
 func CreateInitialData(db *ent.Client, ctx context.Context, cfg config.Config) {
 	log.Println("Creating Initial Data....")
-	createAdmin(db, ctx, cfg)
-	createStudent(db, ctx, cfg)
+	admin := createAdmin(db, ctx, cfg)
+	student := createStudent(db, ctx, cfg)
 	instructor := createInstructor(db, ctx, cfg)
+	users := []*ent.User{admin, student, instructor}
 	categories := createCategories(db, ctx)
-	createCourses(db, ctx, instructor, categories)
+	courses := createCourses(db, ctx, instructor, categories)
+	createReviews(db, ctx, users, courses)
 	log.Println("Initial Data Created")
 }

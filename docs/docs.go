@@ -737,6 +737,123 @@ const docTemplate = `{
                 }
             }
         },
+        "/courses/reviews/{id}": {
+            "get": {
+                "description": "This endpoint retrieves a specific review",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Retrieve a Review",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Review ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.ReviewResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint allows a user to update their review for a specific course",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Update a review",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Review ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Review object",
+                        "name": "review",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/courses.ReviewSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.ReviewResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint allows a user to delete their review for a specific course",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Delete a review",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Review ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/base.ResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            }
+        },
         "/courses/{course_slug}/lessons/{lesson_slug}": {
             "get": {
                 "description": "This endpoint retrieves the details of a particular lesson",
@@ -919,6 +1036,108 @@ const docTemplate = `{
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/{slug}/reviews": {
+            "get": {
+                "description": "This endpoint retrieves paginated responses of a course reviews",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Retrieve Course Reviews",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Course Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Current Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Page Limit",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/courses.ReviewsResponseSchema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint allows a user to create a review for a specific course",
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Create a review for a course",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Course Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Review object",
+                        "name": "review",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/courses.ReviewSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/courses.ReviewResponseSchema"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.InvalidErrorExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/base.NotFoundErrorExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/base.ValidationErrorExample"
                         }
                     }
                 }
@@ -2561,6 +2780,29 @@ const docTemplate = `{
                 }
             }
         },
+        "config.PaginationResponse-courses_ReviewResponseData": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/courses.ReviewResponseData"
+                    }
+                },
+                "items_count": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
         "course.Difficulty": {
             "type": "string",
             "enum": [
@@ -3181,6 +3423,77 @@ const docTemplate = `{
                 }
             }
         },
+        "courses.ReviewResponseData": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/base.UserDataSchema"
+                }
+            }
+        },
+        "courses.ReviewResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/courses.ReviewResponseData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "courses.ReviewSchema": {
+            "type": "object",
+            "required": [
+                "rating"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number",
+                    "maximum": 5,
+                    "minimum": 1
+                }
+            }
+        },
+        "courses.ReviewsResponseSchema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/config.PaginationResponse-courses_ReviewResponseData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data fetched/created/updated/deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
         "courses.SubmitAnswerSchema": {
             "type": "object",
             "required": [
@@ -3512,7 +3825,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "EDNET API",
-	Description:      "## A Full-Featured EDTECH API built with FIBER & ENT ORM.\n\n<!-- ### WEBSOCKETS:\n\n#### Notifications\n\n- URL: `wss://{host}/api/v4/ws/notifications`\n\n- Requires authorization, so pass in the Bearer Authorization header.\n\n- You can only read and not send notification messages into this socket. -->\n\n\n<!-- #### Chats\n\n- URL: `wss://{host}/api/v4/ws/chats/{id}`\n- Requires authorization, so pass in the Bearer Authorization header.\n- Use chat_id as the ID for an existing chat or username if it's the first message in a DM.\n- You cannot read realtime messages from a username that doesn't belong to the authorized user, but you can surely send messages.\n- Only send a message to the socket endpoint after the message has been created or updated, and files have been uploaded.\n- Fields when sending a message through the socket:\n\n  ```json\n  { \"status\": \"CREATED\", \"id\": \"fe4e0235-80fc-4c94-b15e-3da63226f8ab\" }\n  ``` -->",
+	Description:      "## A Comprehensive EDTECH API built with FIBER & ENT ORM.\n\n### Built by Kenechi Ifeanyi (kayprogrammer)\n### Github Repo - https://github.com/kayprogrammer/ednet-fiber-api",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
