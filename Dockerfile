@@ -1,28 +1,30 @@
-# ---- Build Stage ----
-FROM golang:1.24-alpine AS builder
+# syntax=docker/dockerfile:1
+
+# Build Stage
+FROM golang:1.21 AS builder
 
 WORKDIR /app
 
-# Install git (required for some dependencies), and build tools
-RUN apk add --no-cache git
-
+# Copy go mod and sum files
 COPY go.mod go.sum ./
+
+# Download dependencies
 RUN go mod download
 
+# Copy the rest of the source code
 COPY . .
 
-# Build the Go binary
+# Generate Ent code
+RUN go generate ./ent
+
+# Build the binary
 RUN go build -o main .
 
-# ---- Runtime Stage ----
-FROM alpine:latest
+# Final Stage
+FROM gcr.io/distroless/static
 
-WORKDIR /root/
+WORKDIR /app
 
-# Copy binary from build stage
 COPY --from=builder /app/main .
 
-EXPOSE 8000
-
-# Run the binary
-CMD ["./main"]
+CMD ["/app/main"]
